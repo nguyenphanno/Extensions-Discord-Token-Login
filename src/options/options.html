@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="color-scheme" content="dark" />
+    <title>Token Login · Settings</title>
+    <link rel="stylesheet" href="styles/options.css" />
+  </head>
+  <body class="page">
+    <header class="masthead">
+      <div class="masthead__inner">
+        <span class="masthead__mark" data-mark aria-hidden="true"></span>
+        <div class="masthead__text">
+          <p class="masthead__title">Token Login</p>
+          <p class="masthead__sub">Settings</p>
+        </div>
+        <span class="pill" data-slot="vault-pill">Device key</span>
+      </div>
+    </header>
+
+    <div class="shell">
+      <nav class="sidenav" aria-label="Settings sections">
+        <a class="sidenav__item" href="#accounts" data-section="accounts">
+          <span data-icon="users" aria-hidden="true"></span><span>Accounts</span>
+        </a>
+        <a class="sidenav__item" href="#security" data-section="security">
+          <span data-icon="shieldCheck" aria-hidden="true"></span><span>Security</span>
+        </a>
+        <a class="sidenav__item" href="#behaviour" data-section="behaviour">
+          <span data-icon="sliders" aria-hidden="true"></span><span>Behaviour</span>
+        </a>
+        <a class="sidenav__item" href="#about" data-section="about">
+          <span data-icon="info" aria-hidden="true"></span><span>About</span>
+        </a>
+      </nav>
+
+      <main class="content">
+        <!-- ------------------------------------------------------ accounts -->
+        <section class="section" id="accounts">
+          <header class="section__head">
+            <h2 class="section__title">Saved accounts</h2>
+            <p class="section__lede" data-slot="accounts-lede">Loading…</p>
+          </header>
+
+          <ul class="rows" data-slot="account-rows" role="list"></ul>
+
+          <div class="actions">
+            <button class="btn btn--secondary" type="button" data-action="validate-all">
+              <span data-icon="refresh" aria-hidden="true"></span><span>Check all tokens</span>
+            </button>
+            <button class="btn btn--secondary" type="button" data-action="logout">
+              <span data-icon="signOut" aria-hidden="true"></span><span>Sign out of Discord</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- ------------------------------------------------------ security -->
+        <section class="section" id="security">
+          <header class="section__head">
+            <h2 class="section__title">Vault</h2>
+            <p class="section__lede">
+              Tokens are encrypted with AES-256-GCM before they touch disk. This section decides
+              where the encryption key lives.
+            </p>
+          </header>
+
+          <div class="panel" data-slot="mode-panel">
+            <div class="mode" data-mode="device">
+              <div class="mode__head">
+                <span class="mode__icon mode__icon--brand" data-icon="database" aria-hidden="true"></span>
+                <div class="stack">
+                  <p class="mode__title">Device key</p>
+                  <p class="mode__sub">
+                    A random 256-bit key is generated once and kept in this browser's extension
+                    storage.
+                  </p>
+                </div>
+              </div>
+              <p class="mode__caveat">
+                Convenient, and it protects against a copied profile, a synced backup, or anyone
+                casually opening devtools. It does not protect against code already running on your
+                machine. Add a passphrase if that matters to you.
+              </p>
+            </div>
+
+            <div class="mode" data-mode="passphrase">
+              <div class="mode__head">
+                <span class="mode__icon mode__icon--success" data-icon="lock" aria-hidden="true"></span>
+                <div class="stack">
+                  <p class="mode__title">Passphrase</p>
+                  <p class="mode__sub">
+                    Derived with PBKDF2-SHA256 at <span data-slot="iterations">310,000</span>
+                    iterations and never written to disk. You unlock once per browser session.
+                  </p>
+                </div>
+              </div>
+              <p class="mode__caveat" data-slot="unlock-cost"></p>
+            </div>
+          </div>
+          <div class="panel" data-slot="passphrase-panel" hidden>
+            <div class="field">
+              <label class="field__label" for="new-pass">New passphrase</label>
+              <input
+                class="input"
+                id="new-pass"
+                type="password"
+                autocomplete="new-password"
+                spellcheck="false"
+              />
+              <p class="field__hint field__hint--error" data-slot="pass-error" role="alert" hidden></p>
+            </div>
+            <div class="field">
+              <label class="field__label" for="confirm-pass">Confirm passphrase</label>
+              <input
+                class="input"
+                id="confirm-pass"
+                type="password"
+                autocomplete="new-password"
+                spellcheck="false"
+              />
+            </div>
+            <p class="field__hint">
+              Every saved token is re-encrypted under the new key. If you forget this passphrase,
+              the tokens cannot be recovered by anyone, including you.
+            </p>
+            <div class="actions">
+              <button class="btn btn--primary" type="button" data-action="set-passphrase">
+                Enable passphrase
+              </button>
+              <button class="btn btn--ghost" type="button" data-action="cancel-passphrase">
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn--secondary" type="button" data-action="start-passphrase" hidden>
+              <span data-icon="lock" aria-hidden="true"></span><span>Set a passphrase</span>
+            </button>
+            <button class="btn btn--secondary" type="button" data-action="drop-passphrase" hidden>
+              <span data-icon="unlock" aria-hidden="true"></span><span>Remove passphrase</span>
+            </button>
+            <button class="btn btn--secondary" type="button" data-action="lock" hidden>
+              <span data-icon="lock" aria-hidden="true"></span><span>Lock now</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- ---------------------------------------------------- behaviour -->
+        <section class="section" id="behaviour">
+          <header class="section__head">
+            <h2 class="section__title">Behaviour</h2>
+            <p class="section__lede">
+              Preferences are stored in plain text. None of them are secret.
+            </p>
+          </header>
+
+          <div class="panel panel--flush" data-settings>
+            <label class="switch">
+              <span class="switch__text">
+                <span class="switch__title">Focus the token field on open</span>
+                <span class="switch__detail">Start typing a token as soon as the popup appears.</span>
+              </span>
+              <input type="checkbox" data-setting="focusTokenOnOpen" />
+              <span class="switch__control" aria-hidden="true"></span>
+            </label>
+
+            <label class="switch">
+              <span class="switch__text">
+                <span class="switch__title">Clear the field after signing in</span>
+                <span class="switch__detail">Keeps a pasted token out of the DOM once it is saved.</span>
+              </span>
+              <input type="checkbox" data-setting="clearTokenAfterLogin" />
+              <span class="switch__control" aria-hidden="true"></span>
+            </label>
+
+            <label class="switch">
+              <span class="switch__text">
+                <span class="switch__title">Show tokens in plain text</span>
+                <span class="switch__detail">The token field is masked by default.</span>
+              </span>
+              <input type="checkbox" data-setting="revealToken" />
+              <span class="switch__control" aria-hidden="true"></span>
+            </label>
+
+            <label class="switch">
+              <span class="switch__text">
+                <span class="switch__title">Open Discord in a new window</span>
+                <span class="switch__detail">Otherwise an existing Discord tab is reused.</span>
+              </span>
+              <input type="checkbox" data-setting="openInNewWindow" />
+              <span class="switch__control" aria-hidden="true"></span>
+            </label>
+
+            <label class="switch">
+              <span class="switch__text">
+                <span class="switch__title">Show the account count on the toolbar</span>
+                <span class="switch__detail">Draws a badge with the number of saved accounts.</span>
+              </span>
+              <input type="checkbox" data-setting="showBadge" />
+              <span class="switch__control" aria-hidden="true"></span>
+            </label>
+          </div>
+        </section>
+        <!-- --------------------------------------------------------- about -->
+        <section class="section" id="about">
+          <header class="section__head">
+            <h2 class="section__title">About</h2>
+          </header>
+
+          <div class="panel">
+            <dl class="facts">
+              <div class="facts__row">
+                <dt>Version</dt>
+                <dd data-slot="version">—</dd>
+              </div>
+              <div class="facts__row">
+                <dt>Accounts stored</dt>
+                <dd data-slot="account-count">—</dd>
+              </div>
+              <div class="facts__row">
+                <dt>Encryption</dt>
+                <dd>AES-256-GCM · PBKDF2-SHA256</dd>
+              </div>
+              <div class="facts__row">
+                <dt>Network</dt>
+                <dd>discord.com only. No analytics, no telemetry.</dd>
+              </div>
+            </dl>
+
+            <p class="legal">
+              This tool is for managing accounts you own. A Discord token is equivalent to a
+              password — anyone who obtains one can sign in as you, and Discord's terms of service
+              govern its use. Revoke any token you are unsure about from
+              <em>Settings → Devices</em> on discord.com.
+            </p>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn--quiet-danger" type="button" data-action="wipe">
+              <span data-icon="trash" aria-hidden="true"></span><span>Erase all data</span>
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>

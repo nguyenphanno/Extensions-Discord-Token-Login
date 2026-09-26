@@ -1,0 +1,27 @@
+{
+  "name": "discord-token-login",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Chromium MV3 extension for managing and switching Discord accounts securely.",
+  "type": "module",
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "icons": "node scripts/generate-icons.mjs",
+    "icons:preview": "node scripts/icon-sheet.mjs",
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "verify:crypto": "node scripts/crypto-smoke.mjs",
+    "verify:api": "node scripts/discord-client-smoke.mjs",
+    "verify:signin": "node scripts/sign-in-smoke.mjs",
+    "verify:page": "node scripts/page-session-smoke.mjs",
+    "verify": "npm run typecheck && npm run verify:crypto && npm run verify:api && npm run verify:signin && npm run build && npm run verify:page"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.0",
+    "typescript": "5.7.3"
+  },
+  "dependencies": {
+    "@tabler/icons": "^3.48.0"
+  }
+}

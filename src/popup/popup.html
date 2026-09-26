@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="color-scheme" content="dark" />
+    <title>Discord Token Login</title>
+    <link rel="stylesheet" href="styles/popup.css" />
+  </head>
+  <body class="popup">
+    <a class="skip-link" href="#stage">Skip to content</a>
+
+    <!-- Identity bar: what this is, and the two global controls. -->
+    <header class="topbar">
+      <div class="topbar__identity">
+        <span class="topbar__mark" data-mark aria-hidden="true"></span>
+        <span class="topbar__text">
+          <span class="topbar__name">Token Login</span>
+          <span class="topbar__meta" data-slot="vault-state">Checking vault…</span>
+        </span>
+      </div>
+      <div class="topbar__actions">
+        <span class="topbar__version" data-slot="version">v2.1</span>
+        <button class="btn btn--icon" type="button" data-action="lock" title="Lock vault" hidden>
+          <span data-icon="lock" aria-hidden="true"></span>
+          <span class="visually-hidden">Lock vault</span>
+        </button>
+        <button class="btn btn--icon" type="button" data-action="settings" title="Settings">
+          <span data-icon="sliders" aria-hidden="true"></span>
+          <span class="visually-hidden">Open settings</span>
+        </button>
+      </div>
+    </header>
+
+    <nav class="segmented" role="tablist" aria-label="Sections">
+      <button class="segmented__tab" type="button" role="tab" data-tab="login" aria-selected="true">
+        <span data-icon="key" aria-hidden="true"></span>
+        <span>Log in</span>
+      </button>
+      <button class="segmented__tab" type="button" role="tab" data-tab="accounts" aria-selected="false">
+        <span data-icon="users" aria-hidden="true"></span>
+        <span>Accounts</span>
+        <span class="segmented__count" data-slot="account-count" hidden>0</span>
+      </button>
+      <span class="segmented__thumb" data-slot="segmented-thumb" aria-hidden="true"></span>
+    </nav>
+
+    <main class="stage" id="stage">
+      <!-- ------------------------------------------------------ locked -- -->
+      <section class="view" data-view="locked" hidden aria-labelledby="locked-title">
+        <div class="view__header">
+          <h1 class="view__title" id="locked-title">Vault locked</h1>
+          <p class="view__lede">
+            Your saved tokens are encrypted. Enter your passphrase to continue.
+          </p>
+        </div>
+
+        <form class="stack gap-5" data-form="unlock" novalidate>
+          <div class="field">
+            <label class="field__label" for="unlock-pass">Passphrase</label>
+            <input
+              class="input"
+              id="unlock-pass"
+              name="passphrase"
+              type="password"
+              autocomplete="current-password"
+              spellcheck="false"
+              required
+            />
+            <p class="field__hint field__hint--error" data-slot="unlock-error" role="alert" hidden></p>
+          </div>
+          <button class="btn btn--primary btn--block" type="submit" data-submit="unlock">
+            <span data-icon="lock" aria-hidden="true"></span>
+            <span>Unlock</span>
+          </button>
+        </form>
+      </section>
+
+      <!-- -------------------------------------------------------- login -- -->
+      <section class="view" data-view="login" hidden aria-labelledby="login-title">
+        <div class="view__header">
+          <h1 class="view__title" id="login-title">Sign in with a token</h1>
+          <p class="view__lede">Paste a token to open Discord. Nothing leaves this browser.</p>
+        </div>
+
+        <form class="stack gap-5" data-form="login" novalidate>
+          <div class="field">
+            <label class="visually-hidden" for="token">User token</label>
+            <div class="token-field" data-state="empty">
+              <div class="token-field__frame">
+                <input
+                  class="input token-field__input"
+                  id="token"
+                  name="token"
+                  type="password"
+                  spellcheck="false"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  autocorrect="off"
+                  placeholder="Paste your Discord token here…"
+                  required
+                />
+                <button
+                  class="token-field__action"
+                  type="button"
+                  data-action="copy-token"
+                  title="Copy token"
+                >
+                  <span data-icon="copy" aria-hidden="true"></span>
+                  <span class="visually-hidden">Copy token</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button class="btn btn--secondary" type="button" data-action="capture">
+              <span data-icon="scan" aria-hidden="true"></span>
+              <span>Capture from session</span>
+            </button>
+            <button class="btn btn--secondary" type="button" data-action="pick-file">
+              <span data-icon="fileUpload" aria-hidden="true"></span>
+              <span>Choose .txt</span>
+            </button>
+            <button class="btn btn--ghost" type="button" data-action="save-only">Save only</button>
+          </div>
+
+          <!--
+            A visually hidden native input. It is clicked programmatically by the
+            "Choose .txt" button, which keeps the OS file dialog and its
+            "remember my last folder" behaviour instead of reimplementing them.
+          -->
+          <input
+            class="visually-hidden"
+            id="token-file"
+            type="file"
+            accept=".txt,text/plain"
+            tabindex="-1"
+            aria-hidden="true"
+          />
+
+          <button class="btn btn--primary btn--block btn--lg" type="submit" data-submit="login">
+            <span data-icon="signIn" aria-hidden="true"></span>
+            <span>Sign in</span>
+          </button>
+        </form>
+
+        <details class="disclosure">
+          <summary class="disclosure__summary">
+            <span class="disclosure__summary-icon" data-icon="info" aria-hidden="true"></span>
+            <span>Where do I find my token?</span>
+            <span class="disclosure__chevron" data-icon="chevronDown" aria-hidden="true"></span>
+          </summary>
+
+          <ol class="disclosure__body">
+            <li>
+              <span class="disclosure__step">
+                <span class="disclosure__text">
+                  Open <code>discord.com/app</code> and sign in normally.
+                </span>
+              </span>
+            </li>
+            <li>
+              <span class="disclosure__step">
+                <span class="disclosure__text">
+                  Press <kbd>F12</kbd>, open the <code>Network</code> tab, then reload with
+                  <kbd>F5</kbd>.
+                </span>
+              </span>
+            </li>
+            <li>
+              <span class="disclosure__step">
+                <span class="disclosure__text">
+                  Filter by <code>Fetch/XHR</code> and click any request to
+                  <code>/api/v9/users/@me</code>.
+                </span>
+              </span>
+            </li>
+            <li>
+              <span class="disclosure__step">
+                <span class="disclosure__text">
+                  Under <strong>Request Headers</strong>, find
+                  <code>authorization</code> and copy its whole value — that
+                  value is the token itself, with no prefix.
+                </span>
+              </span>
+            </li>
+            <li>
+              <span class="disclosure__step">
+                <span class="disclosure__text">
+                  Paste it above, or drop it in a <code>.txt</code> file and use
+                  <em>Choose .txt</em>.
+                </span>
+              </span>
+            </li>
+          </ol>
+
+          <p class="disclosure__note">
+            <span class="disclosure__note-icon" data-icon="warning" aria-hidden="true"></span>
+            <span>
+              Only ever do this with your own account. A token is a password — anyone who
+              obtains one can sign in as you, with no second check.
+            </span>
+          </p>
+        </details>
+      </section>
+      <!-- ----------------------------------------------------- accounts -- -->
+      <section class="view" data-view="accounts" hidden aria-labelledby="accounts-title">
+        <div class="view__header view__header--row">
+          <div class="stack">
+            <h1 class="view__title" id="accounts-title">Your accounts</h1>
+            <p class="view__lede" data-slot="accounts-lede">Nothing saved yet.</p>
+          </div>
+          <button
+            class="btn btn--icon"
+            type="button"
+            data-action="validate-all"
+            title="Check all tokens"
+          >
+            <span data-icon="refresh" aria-hidden="true"></span>
+            <span class="visually-hidden">Check all tokens</span>
+          </button>
+        </div>
+
+        <div class="progress" data-slot="validation-progress" hidden>
+          <div class="progress__bar" style="width: 0%"></div>
+        </div>
+
+        <ul class="account-list" data-slot="account-list" role="list"></ul>
+
+        <div class="empty" data-slot="accounts-empty" hidden>
+          <span class="empty__glyph" data-icon="users" aria-hidden="true"></span>
+          <p class="empty__title">No accounts saved</p>
+          <p class="empty__body">
+            Paste a token on the Log in tab, or capture one from a Discord tab that is already
+            signed in.
+          </p>
+          <button class="btn btn--secondary" type="button" data-action="goto-login">Go to Log in</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Persistent footer: what is signed in, and the way out of it. -->
+    <footer class="statusbar" data-slot="statusbar">
+      <span class="statusbar__pip" data-slot="active-pip" aria-hidden="true"></span>
+      <span class="statusbar__text truncate" data-slot="active-label">Not signed in</span>
+      <button class="btn btn--quiet-danger btn--sm" type="button" data-action="logout" hidden>
+        <span data-icon="signOut" aria-hidden="true"></span>
+        <span>Sign out</span>
+      </button>
+    </footer>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
