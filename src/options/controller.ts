@@ -478,6 +478,20 @@ function avatarNode(account: Account): HTMLElement {
     node.style.backgroundColor = account.accentColor;
   }
 
+  // Same wrapper rule as the popup: the decoration overflows the avatar, so
+  // it cannot live inside the element that clips to a circle.
+  if (account.avatarDecorationUrl) {
+    const decoration = el('img', {
+      class: 'avatar__decoration',
+      src: account.avatarDecorationUrl,
+      alt: '',
+      loading: 'lazy',
+      decoding: 'async',
+    });
+    decoration.addEventListener('error', () => decoration.remove());
+    return el('span', { class: 'avatar-decorated' }, [node, decoration]);
+  }
+
   return node;
 }
 

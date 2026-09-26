@@ -89,6 +89,19 @@ export function buildAvatarUrl(userId: string, hash: string | null): string | nu
   return `${DISCORD_API_CDN}/avatars/${userId}/${hash}.${extension}?size=160&quality=lossless`;
 }
 
+/**
+ * Builds the CDN URL for an avatar decoration preset.
+ *
+ * Decorations live on their own route and are always requested as PNG —
+ * Discord serves animated decorations as APNG from the same path, so unlike
+ * `buildAvatarUrl` there is no extension to switch. This mirrors discord.js,
+ * whose own CDN test asserts the plain `.png` URL.
+ */
+export function buildAvatarDecorationUrl(asset: string | null): string | null {
+  if (asset === null || asset.length === 0) return null;
+  return `${DISCORD_API_CDN}/avatar-decoration-presets/${asset}.png`;
+}
+
 export function formatRelativeTime(timestamp: number | null, now = Date.now()): string {
   if (timestamp === null) return 'never';
   const delta = Math.max(0, now - timestamp);

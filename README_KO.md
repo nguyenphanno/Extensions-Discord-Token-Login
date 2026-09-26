@@ -12,7 +12,7 @@
 [![Zero Telemetry](https://img.shields.io/badge/Zero-Telemetry-57F287?style=flat-square&logo=shield&logoColor=white)](#-보안-모델)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](tsconfig.json)
 [![Build](https://img.shields.io/badge/Build-Passing-57F287?style=flat-square&logo=githubactions&logoColor=white)](#-개발과-품질-게이트)
-[![Tests](https://img.shields.io/badge/Tests-91%2F91-57F287?style=flat-square&logo=jest&logoColor=white)](#-개발과-품질-게이트)
+[![Tests](https://img.shields.io/badge/Tests-123%2F123-57F287?style=flat-square&logo=jest&logoColor=white)](#-개발과-품질-게이트)
 [![License: MIT](https://img.shields.io/badge/License-MIT-ED4245?style=flat-square)](LICENSE)
 
 </div>
@@ -107,9 +107,9 @@ Chrome, Edge, Brave, Opera 또는 Arc에서:
 
 | | |
 | --- | --- |
-| **브라우저** | Chrome / Edge / Brave / Opera / Arc 110+ (Manifest V3) |
-| **Node.js** | 18 이상 (빌드용일 뿐 — 확장 프로그램 자체는 런타임이 필요 없음) |
-| **권한** | `storage`, `tabs`, `scripting`, `contextMenus` — 모두 `src/manifest.json`에 선언됨 |
+| **브라우저** | Chrome / Edge / Brave / Opera / Arc 116+ (Manifest V3) |
+| **Node.js** | 20 이상 (빌드와 검증 스위트용 — 확장 프로그램 자체는 런타임이 필요 없음) |
+| **권한** | `storage`, `scripting`, `contextMenus`, 그리고 `https://discord.com/*` 호스트 접근 — 모두 `src/manifest.json`에 선언됨 |
 
 ---
 
@@ -302,13 +302,16 @@ npm run typecheck      # tsc --noEmit, strict 모드
 npm run verify:crypto  # 실제 AES-GCM / PBKDF2 / 재키화 경로를 실행
 npm run verify:api     # 토큰이 실려 나가는 요청을 단언
 npm run verify:signin  # 스텁된 브라우저 API로 로그인 흐름 구동
+npm run verify:format  # 순수 포맷 + CDN URL 헬퍼 검증
 npm run verify:page    # 가짜 페이지로 삽입된 페이지 함수를 구동
+npm run verify:docs    # README의 모든 상대 링크가 해석되는지 확인
 npm run build          # 번들 + 복사 + 검증을 거쳐 dist/ 생성
 npm run watch          # 증분 재빌드
 npm run icons          # PNG 세트 재생성
 npm run icons:preview  # icon-sheet.html에 아이콘 컨택트 시트 생성
 npm run clean          # dist/ 제거
-npm run verify         # 여섯 개 게이트를 순서대로 모두 실행
+npm run pack           # 빌드 후 스토어 제출용 zip 생성
+npm run verify         # 여덟 개 게이트를 순서대로 모두 실행
 ```
 
 빌드는 manifest나 HTML이 존재하지 않는 파일을 참조하는 `dist/`를 내보내는 것을
@@ -319,8 +322,10 @@ npm run verify         # 여섯 개 게이트를 순서대로 모두 실행
 | `typecheck` | strict `tsc` | 타입, 죽은 import, API 표류 |
 | `verify:crypto` | 20 | 암호문이 토큰을 숨김, IV 재사용 없음, 잘못된 패스프레이즈 거부, 잠금 동작, 재키화가 손실 없이 모든 레코드를 마이그레이션 |
 | `verify:api` | 18 | 토큰이 올바른 헤더로 접두사나 공백 없이 전송됨; 200/401/429 분류가 정확함 |
-| `verify:signin` | 12 | 로그인이 커밋된 문서를 기다리고, 프레임 간 폴백하며, 실패 시 토큰이 아닌 탭을 보고함 |
+| `verify:signin` | 15 | 로그인이 커밋된 문서를 기다리고, 프레임 간 폴백하며, 1회 새로고침으로 복구하고, 실패 시 토큰이 아닌 탭을 보고함 |
 | `verify:page` | 41 | 네 개 캡처 레이어, 후보 순위 결정, 그리고 클라이언트 자체 핸들러를 앞서는 언로드 가드 |
+| `verify:format` | 23 | 아바타 + 장식 CDN URL, 토큰 목록 파싱, 스노우플레이크 디코딩과 시간 구간 |
+| `verify:docs` | 6 | 다섯 README의 모든 상대 링크가 실제 파일을 가리킴 |
 | `build` | manifest + HTML | 참조된 모든 파일이 `dist/`에 실제로 존재함 |
 
 각 테스트 스위트는 실제로 잡아낸 버그가 있기 때문에 존재합니다. `verify:crypto`는 새로

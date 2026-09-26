@@ -11,7 +11,7 @@ import { NETWORK } from '../core/constants';
 import { createLogger } from '../core/logger';
 import type { Account, AccountRecord, AppState, Settings } from '../core/types';
 import { mapLimit, sleep } from '../core/utils/async';
-import { buildAvatarUrl, resolveAccentColor, snowflakeToDate } from '../core/utils/format';
+import { buildAvatarDecorationUrl, buildAvatarUrl, resolveAccentColor, snowflakeToDate } from '../core/utils/format';
 import { vault } from '../crypto/vault';
 import { readSettings, writeSettings } from '../platform/settings';
 import { checkToken, classifyApiError, looksLikeToken, type TokenCheck } from './discord-client';
@@ -26,18 +26,24 @@ type Profile = {
   discriminator: string;
   avatar: string | null;
   accent_color: number | null;
+  avatar_decoration?: string | null;
+  avatar_decoration_data?: { asset: string } | null;
 };
 
 /** Maps a Discord profile onto our stored account, preserving local fields. */
 function toAccount(user: Profile, existing?: Account): Account {
   const now = Date.now();
   const legacyTag = user.discriminator === '0' ? '' : `#${user.discriminator}`;
+  // The structured payload is what current API versions return; the flat hash
+  // is the same decoration from older ones.
+  const decoration = user.avatar_decoration_data?.asset ?? user.avatar_decoration ?? null;
 
   return {
     id: user.id,
     tag: `${user.username}${legacyTag}`,
     displayName: user.global_name ?? user.username,
     avatarUrl: buildAvatarUrl(user.id, user.avatar),
+    avatarDecorationUrl: buildAvatarDecorationUrl(decoration),
     accentColor: resolveAccentColor(user.id, user.accent_color),
     status: 'valid',
     note: existing?.note ?? '',

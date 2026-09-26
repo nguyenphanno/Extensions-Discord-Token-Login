@@ -64,6 +64,12 @@ export const TIMING = {
   /** Poll interval while waiting for a Discord tab to finish loading. */
   TAB_POLL_MS: 250,
   TAB_READY_TIMEOUT_MS: 20_000,
+  /**
+   * How long to let a reload take effect before judging the new document.
+   * Polling alone cannot tell a stale document that still reports `complete`
+   * from a freshly committed one, so the first poll waits out this window.
+   */
+  RELOAD_SETTLE_MS: 700,
   /** Popup keeps its state alive this long after the last write. */
   WORKER_IDLE_MS: 45_000,
   TOAST_MS: 4_200,

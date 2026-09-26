@@ -49,9 +49,14 @@ export interface Extraction {
 }
 
 export class NoDiscordTabError extends Error {
-  constructor(message = 'Open discord.com in a tab first, then try again.') {
+  readonly reason: 'unreachable' | 'no-storage' | null;
+  constructor(
+    message = 'Open discord.com in a tab first, then try again.',
+    reason: 'unreachable' | 'no-storage' | null = null,
+  ) {
     super(message);
     this.name = 'NoDiscordTabError';
+    this.reason = reason;
   }
 }
 
@@ -155,10 +160,10 @@ export function readPageSession(keys: PageKeys): PageSession {
     blocked = true;
   }
 
-  if (local === null && !blocked) {
-    report.reason = 'no-storage';
-    return report;
-  }
+  // A frame may have no Storage object while the client is alive (a blank or
+  // wrapper frame), so this is recorded — not returned — until every probe
+  // has run. Only a frame with no candidate from any layer keeps `no-storage`.
+  const storageMissing = local === null && !blocked;
 
   const stores: Array<[Storage, 'localStorage' | 'sessionStorage']> = [];
   if (local !== null) stores.push([local, 'localStorage']);
@@ -368,6 +373,13 @@ export function readPageSession(keys: PageKeys): PageSession {
 
   for (const value of client.lookalike) add(value, 'memory', null, 'memory');
 
+  // Storage may be unreachable while memory answered: those frames are `ok`.
+  // Only a frame with nothing from any layer stays `no-storage`.
+  if (candidates.length === 0 && storageMissing) {
+    report.reason = 'no-storage';
+    return report;
+  }
+
   // Nothing plausible at all. Report what the page *does* hold, because that is
   // what separates "signed out" from "signed in, but the token lives elsewhere".
   if (candidates.length === 0) {
@@ -406,16 +418,34 @@ export async function findDiscordTab(): Promise<chrome.tabs.Tab> {
 }
 
 /**
- * Waits for a Discord document to finish loading, so an injection is never
- * thrown away by a navigation racing the script.
+ * Waits until the tab is holding a *committed* discord.com document, so a read
+ * is never thrown away by a navigation racing the script.
+ *
+ * `tab.status === 'complete'` alone is not enough: a tab reports `complete`
+ * for whatever document it is currently holding — including the blank one a
+ * freshly created window starts on and a restored session can sit on. Reading
+ * there is the `no-storage` failure, so the URL is checked too. Resolves
+ * `false` when the tab never reaches discord.com (or vanishes mid-wait), so
+ * the caller can ask for a reload instead of reading a dead document.
  */
-export async function waitForDocument(tabId: number, timeoutMs = TIMING.TAB_READY_TIMEOUT_MS) {
+export async function waitForDocument(
+  tabId: number,
+  timeoutMs = TIMING.TAB_READY_TIMEOUT_MS,
+): Promise<boolean> {
   const deadline = Date.now() + timeoutMs;
 
   for (;;) {
-    const tab = await chrome.tabs.get(tabId);
-    if (tab.status === 'complete') return tab;
-    if (Date.now() > deadline) return tab; // Proceed anyway; injection will report.
+    let tab: chrome.tabs.Tab | null = null;
+    try {
+      tab = await chrome.tabs.get(tabId);
+    } catch {
+      return false; // The tab closed while we were waiting for it.
+    }
+
+    const url = tab.url ?? '';
+    const committed = url.startsWith(DISCORD.ORIGIN);
+    if (committed && tab.status === 'complete') return true;
+    if (Date.now() > deadline) return committed; // Slow boot; still readable.
     await sleep(TIMING.TAB_POLL_MS);
   }
 }
@@ -539,9 +569,22 @@ export async function extractTokenFromTab(tab: chrome.tabs.Tab): Promise<Extract
   }
 
   if (reads.every((read) => read.reason === 'no-storage')) {
+    // Per-frame answers are the fastest way to tell a document that was blank
+    // from one whose storage the browser took away — same as the sign-in path.
+    const seenFrames = [
+      ...new Set(reads.map((read) => read.frameUrl ?? '').filter((url) => url.length > 0)),
+    ].slice(0, 3);
+    const unreadable = injections.length - reads.length;
+    log.warn(
+      `No frame could hold the session: ${reads
+        .map((read) => `${read.frameUrl || '(no url)'} -> ${read.reason}`)
+        .join('; ')}${unreadable > 0 ? ` (${unreadable} frame(s) could not be read)` : ''}`,
+    );
+    const where = seenFrames.length > 0 ? ` (Frames seen: ${seenFrames.join(', ')}.)` : '';
     throw new NoDiscordTabError(
       'That tab is not a normal web page, so it has nowhere to store a session. ' +
-        'Open discord.com/app in a tab and sign in there first.',
+        `Open discord.com/app in a tab and sign in there first.${where}`,
+      'no-storage',
     );
   }
 
@@ -583,9 +626,53 @@ export async function extractTokenFromTab(tab: chrome.tabs.Tab): Promise<Extract
   );
 }
 
+/**
+ * Reads with one automatic recovery for the case the user would otherwise
+ * fix by hand.
+ *
+ * "No frame has storage" is almost always a document that could not hold a
+ * session — a blank, detached or mid-replacement frame the tab was briefly
+ * reporting as its own — and the standing advice is "reload the tab and try
+ * again". That is mechanical, so the extension does it once itself rather than
+ * asking: reload, let the new document settle, then read again. Every other
+ * failure (site data blocked, a signed-out tab) is a property of the profile
+ * or the tab, and reloading would not change it.
+ */
+async function extractWithRecovery(tab: chrome.tabs.Tab, timeoutMs = TIMING.TAB_READY_TIMEOUT_MS): Promise<Extraction> {
+  const tabId = tab.id as number;
+  try {
+    return await extractTokenFromTab(tab);
+  } catch (error) {
+    if (!(error instanceof NoDiscordTabError) || error.reason !== 'no-storage') throw error;
+
+    log.warn('No frame could hold the session; reloading the tab once and retrying.');
+    await chrome.tabs.reload(tabId);
+
+    // Polling alone cannot distinguish the stale document, which keeps
+    // reporting `complete` until it is replaced, from the new one.
+    await sleep(TIMING.RELOAD_SETTLE_MS);
+    if (!(await waitForDocument(tabId, timeoutMs))) {
+      throw new NoDiscordTabError(
+        'That Discord tab never reached discord.com, so there was nothing to read. ' +
+          'Reload it and try again.',
+        'unreachable',
+      );
+    }
+
+    return extractTokenFromTab(tab);
+  }
+}
+
 /** Convenience path used by the popup button and the context menu. */
-export async function extractFromActiveSession(): Promise<Extraction> {
+export async function extractFromActiveSession(timeoutMs = TIMING.TAB_READY_TIMEOUT_MS): Promise<Extraction> {
   const tab = await findDiscordTab();
-  await waitForDocument(tab.id as number);
-  return extractTokenFromTab(tab);
+  const tabId = tab.id as number;
+  if (!(await waitForDocument(tabId, timeoutMs))) {
+    throw new NoDiscordTabError(
+      'That Discord tab never reached discord.com, so there was nothing to read. ' +
+        'Reload it and try again.',
+      'unreachable',
+    );
+  }
+  return extractWithRecovery(tab, timeoutMs);
 }

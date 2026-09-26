@@ -12,7 +12,7 @@
 [![Zero Telemetry](https://img.shields.io/badge/Zero-Telemetry-57F287?style=flat-square&logo=shield&logoColor=white)](#-安全模型)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](tsconfig.json)
 [![Build](https://img.shields.io/badge/Build-Passing-57F287?style=flat-square&logo=githubactions&logoColor=white)](#-开发与质量门禁)
-[![Tests](https://img.shields.io/badge/Tests-91%2F91-57F287?style=flat-square&logo=jest&logoColor=white)](#-开发与质量门禁)
+[![Tests](https://img.shields.io/badge/Tests-123%2F123-57F287?style=flat-square&logo=jest&logoColor=white)](#-开发与质量门禁)
 [![License: MIT](https://img.shields.io/badge/License-MIT-ED4245?style=flat-square)](LICENSE)
 
 </div>
@@ -106,9 +106,9 @@ npm run build        # 生成 dist/
 
 | | |
 | --- | --- |
-| **浏览器** | Chrome / Edge / Brave / Opera / Arc 110+（Manifest V3） |
-| **Node.js** | 18 或更高版本（仅用于构建 —— 扩展本身不需要运行时） |
-| **权限** | `storage`、`tabs`、`scripting`、`contextMenus` —— 全部在 `src/manifest.json` 中声明 |
+| **浏览器** | Chrome / Edge / Brave / Opera / Arc 116+（Manifest V3） |
+| **Node.js** | 20 或更高版本（用于构建与验证套件 —— 扩展本身不需要运行时） |
+| **权限** | `storage`、`scripting`、`contextMenus`，以及 `https://discord.com/*` 的 host 访问权 —— 全部在 `src/manifest.json` 中声明 |
 
 ---
 
@@ -289,13 +289,16 @@ npm run typecheck      # tsc --noEmit，strict 模式
 npm run verify:crypto  # 跑真实的 AES-GCM / PBKDF2 / 换钥路径
 npm run verify:api     # 断言令牌所经由的请求
 npm run verify:signin  # 以桩化的浏览器 API 驱动登录流程
+npm run verify:format  # 校验纯格式化与 CDN URL 辅助函数
 npm run verify:page    # 以假页面驱动被注入页面的函数
+npm run verify:docs    # README 中的所有相对链接均可解析
 npm run build          # 打包 + 拷贝 + 校验到 dist/
 npm run watch          # 增量重建
 npm run icons          # 重新生成 PNG 集合
 npm run icons:preview  # 在 icon-sheet.html 中生成图标总览
 npm run clean          # 删除 dist/
-npm run verify         # 按顺序运行全部六道门禁
+npm run pack           # 构建并打包为可提交商店的 zip
+npm run verify         # 按顺序运行全部八道门禁
 ```
 
 构建会拒绝输出一个 manifest 或 HTML 引用了不存在文件的 `dist/` —— 损坏的包会让
@@ -306,8 +309,10 @@ npm run verify         # 按顺序运行全部六道门禁
 | `typecheck` | strict `tsc` | 类型、无用导入、API 漂移 |
 | `verify:crypto` | 20 | 密文不泄露令牌、IV 不复用、错误密码被拒、锁定有效、换钥迁移全部记录且无丢失 |
 | `verify:api` | 18 | 令牌在正确的请求头中传输、无前缀无空白；200/401/429 分类正确 |
-| `verify:signin` | 12 | 登录等待已提交文档、跨 frame 回退、失败时报告标签页而非令牌 |
+| `verify:signin` | 15 | 登录等待已提交文档、跨 frame 回退、单次刷新自愈、失败时报告标签页而非令牌 |
 | `verify:page` | 41 | 四个捕获层级、候选排序，以及压过客户端自身处理器的卸载守卫 |
+| `verify:format` | 23 | 头像与装扮的 CDN URL、令牌列表解析、雪花 ID 解码与时间分档 |
+| `verify:docs` | 6 | 五个 README 中的所有相对链接都指向真实文件 |
 | `build` | manifest + HTML | `dist/` 中每个被引用的文件都真实存在 |
 
 每个测试套件都因抓到过真实缺陷而存在。`verify:crypto` 发现了一个首次运行的缺陷：

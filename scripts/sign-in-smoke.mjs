@@ -3,9 +3,10 @@
  *
  * `page-session-smoke.mjs` proves what the injected function does once it is
  * inside a page. This suite proves the worker's half of the same job: which tab
- * it waits for, which frames it asks, and what it says when a frame cannot take
- * the value. The browser API surface is stubbed, so the flow runs in Node with
- * no browser.
+ * it waits for, which frames it asks, what it says when a frame cannot take the
+ * value, and that a tab with nowhere to store the session is reloaded once
+ * before the user is asked to do it. The browser API surface is stubbed, so the
+ * flow runs in Node with no browser.
  *
  * It exists because the failure it covers was invisible everywhere else: on a
  * perfectly ordinary Discord tab, sign-in reported "not a normal web page",
@@ -81,7 +82,12 @@ function browser(options) {
       executeScript: async ({ target }) => {
         const scope = target.frameIds !== undefined ? 'top' : 'all';
         state.execute.push(scope);
-        const answers = scope === 'top' ? options.top : options.all ?? options.top;
+        // 'afterReload' lets a case answer differently once the recovery reload
+        // has happened — the only way to prove the reload itself is what turned
+        // a storage-less tab into a signable one.
+        const source =
+          state.reloads > 0 && options.afterReload !== undefined ? options.afterReload : options;
+        const answers = scope === 'top' ? source.top : source.all ?? source.top;
         return (answers ?? []).map((result) => ({ frameId: 0, result }));
       },
     },
@@ -132,7 +138,8 @@ export async function run() {
     }
     check('no storage anywhere is reported as such', message.includes('no page that can hold a session'));
     check('the report names the document it saw', message.includes('about:blank'));
-    check('a failed sign-in does not reload the tab', state.reloads === 0);
+    check('one automatic reload is spent before giving up', state.reloads === 1);
+    check('the retry asks the frames again', state.execute.join(',') === 'top,all,top,all');
   }
 
   // 4. site data switched off is a property of the tab, not of the frame
@@ -157,6 +164,20 @@ export async function run() {
     await signIn(TOKEN);
     check('the blank document is waited out', state.gets >= 2 && state.execute.join(',') === 'top');
     check('the write lands once the app has committed', state.reloads === 1);
+  }
+
+  // 6. a reload can be what turns a storage-less tab into a signable one
+  {
+    const state = browser({
+      top: [write({ url: 'about:blank', error: 'no-storage' })],
+      afterReload: { top: [write({ written: true })] },
+    });
+    const outcome = await signIn(TOKEN);
+    check(
+      'the automatic reload lets the write land',
+      outcome.tabId === 7 && state.execute.join(',') === 'top,all,top',
+    );
+    check('a recovered sign-in still reloads to activate', state.reloads === 2);
   }
 
   return out;

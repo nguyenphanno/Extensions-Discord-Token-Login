@@ -24,10 +24,26 @@ export interface SignInOutcome {
   reused: boolean;
 }
 
+/** Why a sign-in failed, machine-readable so the caller can pick a response. */
+export type SignInFailureReason =
+  | 'unreachable'
+  | 'no-answer'
+  | 'blocked'
+  | 'no-storage'
+  | 'write-rejected';
+
 export class SignInError extends Error {
-  constructor(message: string) {
+  /**
+   * `null` for failures the caller has no better answer to than showing
+   * `message`. `signIn` uses it to decide whether one automatic recovery is
+   * worth trying; the UI only ever renders `message`.
+   */
+  readonly reason: SignInFailureReason | null;
+
+  constructor(message: string, reason: SignInFailureReason | null = null) {
     super(message);
     this.name = 'SignInError';
+    this.reason = reason;
   }
 }
 
@@ -313,12 +329,16 @@ async function injectInto(
 /** The sentence a failed write deserves, chosen by machine-readable reason. */
 function writeFailure(outcome: PageWrite | null): SignInError {
   if (outcome === null) {
-    return new SignInError('The Discord page did not answer the extension. Reload it and try again.');
+    return new SignInError(
+      'The Discord page did not answer the extension. Reload it and try again.',
+      'no-answer',
+    );
   }
   if (outcome.error === 'blocked') {
     return new SignInError(
       'Your browser is blocking site data for discord.com, so a session cannot be written. ' +
         'Allow cookies and site data for discord.com, then try again.',
+      'blocked',
     );
   }
   if (outcome.error === 'no-storage') {
@@ -326,9 +346,21 @@ function writeFailure(outcome: PageWrite | null): SignInError {
       'That Discord tab has no page that can hold a session — every frame the extension ' +
         'could reach came back without storage. Reload the tab, wait for your channels to ' +
         `appear, then try again.${outcome.url.length > 0 ? ` (The tab reported: ${outcome.url}.)` : ''}`,
+      'no-storage',
     );
   }
-  return new SignInError(`Discord's storage rejected the write: ${outcome.error ?? 'unknown error'}`);
+  return new SignInError(
+    `Discord's storage rejected the write: ${outcome.error ?? 'unknown error'}`,
+    'write-rejected',
+  );
+}
+
+/** One frame per line, for the log a rare failure deserves. */
+function describeFrames(frames: readonly PageWrite[]): string {
+  if (frames.length === 0) return 'no frame answered';
+  return frames
+    .map((frame) => `${frame.url.length > 0 ? frame.url : '(no url)'} -> ${frame.error ?? 'ok'}`)
+    .join('; ');
 }
 
 /**
@@ -357,7 +389,47 @@ async function inject(tabId: number, value: string | null): Promise<PageWrite> {
   const recovered = pickWriteOutcome(frames);
   if (recovered !== null && (recovered.written || recovered.cleared)) return recovered;
 
+  // This failure is rare and environment-specific, and the per-frame answers
+  // are the fastest way to tell a document that was blank from a page whose
+  // storage the browser has taken away.
+  log.info(`No frame could hold the session: ${describeFrames(frames)}`);
   throw writeFailure(recovered ?? answer);
+}
+
+/**
+ * Writes the token, with one automatic recovery for the case the user would
+ * otherwise fix by hand.
+ *
+ * "No frame has storage" is almost always a document that could not hold a
+ * session — a blank, detached or mid-replacement frame the tab was briefly
+ * reporting as its own — and the standing advice is "reload the tab and try
+ * again". That is mechanical, so the extension does it once itself rather than
+ * asking: reload, let the new document settle, then write again. Every other
+ * failure (site data blocked, a refused write) is a property of the profile or
+ * the tab, and reloading would not change it.
+ */
+async function writeWithRecovery(tabId: number, token: string): Promise<PageWrite> {
+  try {
+    return await inject(tabId, token);
+  } catch (error) {
+    if (!(error instanceof SignInError) || error.reason !== 'no-storage') throw error;
+
+    log.warn('No frame could hold the session; reloading the tab once and retrying.');
+    await chrome.tabs.reload(tabId);
+
+    // Polling alone cannot distinguish the stale document, which keeps
+    // reporting `complete` until it is replaced, from the new one.
+    await sleep(TIMING.RELOAD_SETTLE_MS);
+    if (!(await waitForAppDocument(tabId))) {
+      throw new SignInError(
+        'That Discord tab never reached discord.com, so there was nowhere to sign in. ' +
+          'Reload it and try again.',
+        'unreachable',
+      );
+    }
+
+    return inject(tabId, token);
+  }
 }
 
 /**
@@ -444,7 +516,7 @@ export async function signIn(
     );
   }
 
-  const result = await inject(tabId, token);
+  const result = await writeWithRecovery(tabId, token);
 
   await chrome.tabs.reload(tabId);
   log.info(

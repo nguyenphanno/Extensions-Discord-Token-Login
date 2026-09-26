@@ -12,7 +12,7 @@
 [![Zero Telemetry](https://img.shields.io/badge/Zero-Telemetry-57F287?style=flat-square&logo=shield&logoColor=white)](#-mô-hình-bảo-mật)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](tsconfig.json)
 [![Build](https://img.shields.io/badge/Build-Passing-57F287?style=flat-square&logo=githubactions&logoColor=white)](#-phát-triển--cổng-chất-lượng)
-[![Tests](https://img.shields.io/badge/Tests-91%2F91-57F287?style=flat-square&logo=jest&logoColor=white)](#-phát-triển--cổng-chất-lượng)
+[![Tests](https://img.shields.io/badge/Tests-123%2F123-57F287?style=flat-square&logo=jest&logoColor=white)](#-phát-triển--cổng-chất-lượng)
 [![License: MIT](https://img.shields.io/badge/License-MIT-ED4245?style=flat-square)](LICENSE)
 
 </div>
@@ -107,9 +107,9 @@ Trên Chrome, Edge, Brave, Opera hoặc Arc:
 
 | | |
 | --- | --- |
-| **Trình duyệt** | Chrome / Edge / Brave / Opera / Arc 110+ (Manifest V3) |
-| **Node.js** | 18 trở lên (chỉ để build — tiện ích không cần runtime) |
-| **Quyền** | `storage`, `tabs`, `scripting`, `contextMenus` — tất cả khai báo trong `src/manifest.json` |
+| **Trình duyệt** | Chrome / Edge / Brave / Opera / Arc 116+ (Manifest V3) |
+| **Node.js** | 20 trở lên (để build và chạy các bộ kiểm thử — tiện ích không cần runtime) |
+| **Quyền** | `storage`, `scripting`, `contextMenus`, cùng quyền host tới `https://discord.com/*` — tất cả khai báo trong `src/manifest.json` |
 
 ---
 
@@ -306,13 +306,16 @@ npm run typecheck      # tsc --noEmit, chế độ strict
 npm run verify:crypto  # chạy thật các đường AES-GCM / PBKDF2 / tái khóa
 npm run verify:api     # khẳng định request mà token được gửi đi
 npm run verify:signin  # chạy đăng nhập với API trình duyệt giả lập
+npm run verify:format  # kiểm tra các hàm định dạng + URL CDN thuần
 npm run verify:page    # chạy hàm được chèn vào trang với trang giả lập
+npm run verify:docs    # mọi liên kết tương đối trong README đều tồn tại
 npm run build          # bundle + sao chép + kiểm tra vào dist/
 npm run watch          # build lại tăng dần
 npm run icons          # tạo lại bộ PNG
 npm run icons:preview  # dựng trang tổng hợp icon vào icon-sheet.html
 npm run clean          # xoá dist/
-npm run verify         # chạy cả sáu cổng theo thứ tự
+npm run pack           # build rồi đóng gói zip để nộp store
+npm run verify         # chạy cả tám cổng theo thứ tự
 ```
 
 Bản build từ chối xuất ra một `dist/` mà manifest hoặc HTML tham chiếu tới tệp
@@ -323,8 +326,10 @@ không tồn tại — một gói hỏng sẽ hỏng build chứ không hỏng C
 | `typecheck` | strict `tsc` | Kiểu, import chết, trôi API |
 | `verify:crypto` | 20 | Bản mã hóa che token, không tái dùng IV, mật khẩu sai bị từ chối, khoá hoạt động, tái khóa di chuyển mọi bản ghi mà không mất |
 | `verify:api` | 18 | Token đi trong đúng header, không tiền tố, không khoảng trắng; 200/401/429 được phân loại đúng |
-| `verify:signin` | 12 | Đăng nhập chờ tài liệu đã commit, lùi qua các frame, và báo tab thay vì báo token khi thất bại |
+| `verify:signin` | 15 | Đăng nhập chờ tài liệu đã commit, lùi qua các frame, tự hồi phục qua 1 lần tải lại, và báo tab thay vì báo token khi thất bại |
 | `verify:page` | 41 | Bốn lớp lấy token, xếp hạng ứng viên, và chốt unload đè lên handler của client |
+| `verify:format` | 23 | URL CDN avatar + trang trí, phân tích danh sách token, giải mã snowflake và mốc thời gian |
+| `verify:docs` | 6 | Mọi liên kết tương đối trong năm README đều trỏ tới tệp thật |
 | `build` | manifest + HTML | Mọi tệp được tham chiếu đều tồn tại trong `dist/` |
 
 Mỗi bộ kiểm thử tồn tại vì nó đã bắt được một lỗi thật. `verify:crypto` phát hiện

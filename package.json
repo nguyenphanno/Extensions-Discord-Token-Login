@@ -14,9 +14,12 @@
     "verify:crypto": "node scripts/crypto-smoke.mjs",
     "verify:api": "node scripts/discord-client-smoke.mjs",
     "verify:signin": "node scripts/sign-in-smoke.mjs",
+    "verify:extract": "node scripts/extract-smoke.mjs",
     "verify:page": "node scripts/page-session-smoke.mjs",
+    "verify:format": "node scripts/format-smoke.mjs",
     "verify:docs": "node scripts/lint-readme-links.mjs",
-    "verify": "npm run typecheck && npm run verify:crypto && npm run verify:api && npm run verify:signin && npm run build && npm run verify:page && npm run verify:docs"
+    "verify": "npm run typecheck && npm run verify:crypto && npm run verify:api && npm run verify:signin && npm run verify:extract && npm run verify:format && npm run build && npm run verify:page && npm run verify:docs",
+    "pack": "npm run build && node scripts/pack.mjs"
   },
   "devDependencies": {
     "esbuild": "0.25.0",

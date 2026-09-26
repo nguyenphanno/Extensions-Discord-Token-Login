@@ -12,7 +12,7 @@
 [![Zero Telemetry](https://img.shields.io/badge/Zero-Telemetry-57F287?style=flat-square&logo=shield&logoColor=white)](#-セキュリティモデル)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](tsconfig.json)
 [![Build](https://img.shields.io/badge/Build-Passing-57F287?style=flat-square&logo=githubactions&logoColor=white)](#-開発と品質ゲート)
-[![Tests](https://img.shields.io/badge/Tests-91%2F91-57F287?style=flat-square&logo=jest&logoColor=white)](#-開発と品質ゲート)
+[![Tests](https://img.shields.io/badge/Tests-123%2F123-57F287?style=flat-square&logo=jest&logoColor=white)](#-開発と品質ゲート)
 [![License: MIT](https://img.shields.io/badge/License-MIT-ED4245?style=flat-square)](LICENSE)
 
 </div>
@@ -107,9 +107,9 @@ Chrome、Edge、Brave、Opera、Arc のいずれかで:
 
 | | |
 | --- | --- |
-| **ブラウザ** | Chrome / Edge / Brave / Opera / Arc 110+（Manifest V3） |
-| **Node.js** | 18 以上（ビルド専用 — 拡張機能自体はランタイム不要） |
-| **権限** | `storage`、`tabs`、`scripting`、`contextMenus` — すべて `src/manifest.json` で宣言 |
+| **ブラウザ** | Chrome / Edge / Brave / Opera / Arc 116+（Manifest V3） |
+| **Node.js** | 20 以上（ビルドと検証スイート用 — 拡張機能自体はランタイム不要） |
+| **権限** | `storage`、`scripting`、`contextMenus`、および `https://discord.com/*` へのホストアクセス — すべて `src/manifest.json` で宣言 |
 
 ---
 
@@ -306,13 +306,16 @@ npm run typecheck      # tsc --noEmit、strict モード
 npm run verify:crypto  # 実物の AES-GCM / PBKDF2 / 再鍵化パスを実行
 npm run verify:api     # トークンが載る送信リクエストを検証
 npm run verify:signin  # スタブ化したブラウザ API でサインインを実行
+npm run verify:format  # 純粋な整形 + CDN URL ヘルパーを検証
 npm run verify:page    # 偽物のページで注入されるページ関数を実行
+npm run verify:docs    # README 内の相対リンクがすべて解決すること
 npm run build          # バンドル + コピー + 検証して dist/ に出力
 npm run watch          # 差分ビルド
 npm run icons          # PNG セットを再生成
 npm run icons:preview  # icon-sheet.html にアイコン一覧を生成
 npm run clean          # dist/ を削除
-npm run verify         # 6 つのゲートをすべて順番に実行
+npm run pack           # ビルドしてストア提出用 zip を作成
+npm run verify         # 8 つのゲートをすべて順番に実行
 ```
 
 ビルドは、manifest や HTML が存在しないファイルを参照している `dist/` を出力することを
@@ -323,8 +326,10 @@ npm run verify         # 6 つのゲートをすべて順番に実行
 | `typecheck` | strict `tsc` | 型、死んだ import、API のずれ |
 | `verify:crypto` | 20 | 暗号文がトークンを隠す、IV の再利用なし、誤ったパスフレーズを拒否、ロックが機能、再鍵化が記録を一つも失わずに移行 |
 | `verify:api` | 18 | トークンが接頭辞も空白もなく正しいヘッダーで送られること。200/401/429 の分類が正しいこと |
-| `verify:signin` | 12 | サインインがコミット済みのドキュメントを待ち、フレーム間でフォールバックし、失敗時にトークンではなくタブを報告する |
+| `verify:signin` | 15 | サインインがコミット済みのドキュメントを待ち、フレーム間でフォールバックし、1 回のリロードで回復し、失敗時にトークンではなくタブを報告する |
 | `verify:page` | 41 | 4 つのキャプチャ層、候補の優先順位付け、そしてクライアント自身のハンドラーを上回るアンロードガード |
+| `verify:format` | 23 | アバター + 装飾の CDN URL、トークン一覧の解析、スノーフレークのデコードと時間バケット |
+| `verify:docs` | 6 | 5 つの README の相対リンクがすべて実在するファイルを指す |
 | `build` | manifest + HTML | 参照されるすべてのファイルが `dist/` に実際に存在する |
 
 各テストスイートは、実際に発見したバグがあるから存在します。`verify:crypto` は、新しく

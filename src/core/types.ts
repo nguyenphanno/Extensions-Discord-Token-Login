@@ -12,7 +12,10 @@ export interface DiscordUser {
   global_name: string | null;
   discriminator: string;
   avatar: string | null;
-  avatar_decoration: string | null;
+  /** Legacy decoration hash; superseded by `avatar_decoration_data`. */
+  avatar_decoration?: string | null;
+  /** Current decoration payload. `asset` is the hash the CDN is asked for. */
+  avatar_decoration_data?: { asset: string; sku_id: string } | null;
   banner: string | null;
   accent_color: number | null;
   bot: boolean;
@@ -36,6 +39,12 @@ export interface Account {
   /** Human-facing display name (global name, falling back to username). */
   displayName: string;
   avatarUrl: string | null;
+  /**
+   * CDN URL of the account's avatar decoration, when Discord reports one.
+   * `null` for accounts that wear none, and for records written before the
+   * field existed.
+   */
+  avatarDecorationUrl: string | null;
   /** Accent colour used for the generated avatar fallback, e.g. `#5865f2`. */
   accentColor: string;
   status: AccountStatus;

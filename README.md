@@ -12,7 +12,7 @@
 [![Zero Telemetry](https://img.shields.io/badge/Zero-Telemetry-57F287?style=flat-square&logo=shield&logoColor=white)](#-security-model)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](tsconfig.json)
 [![Build](https://img.shields.io/badge/Build-Passing-57F287?style=flat-square&logo=githubactions&logoColor=white)](#-development--quality-gates)
-[![Tests](https://img.shields.io/badge/Tests-91%2F91-57F287?style=flat-square&logo=jest&logoColor=white)](#-development--quality-gates)
+[![Tests](https://img.shields.io/badge/Tests-123%2F123-57F287?style=flat-square&logo=jest&logoColor=white)](#-development--quality-gates)
 [![License: MIT](https://img.shields.io/badge/License-MIT-ED4245?style=flat-square)](LICENSE)
 
 </div>
@@ -70,7 +70,7 @@
 | --- | --- |
 | **Quick login** | Paste a token and sign in. The token is validated before it is written anywhere. |
 | **Token capture** | Read the token straight out of a Discord tab that is already signed in, without copying anything by hand. |
-| **Account manager** | Keep several accounts, switch between them, attach local notes, and see which tokens are still healthy. |
+| **Account manager** | Keep several accounts, switch between them, attach local notes, and see which tokens are still healthy — avatars and avatar decorations included. |
 | **Encrypted storage** | Every token is sealed with **AES-256-GCM** before it reaches `chrome.storage.local`. Optional passphrase protection derives the key with **PBKDF2-HMAC-SHA256** at 310 000 iterations. |
 | **Context menu** | Right-click the toolbar icon for quick login, token capture, and settings — no need to open the popup first. |
 | **Toolbar badge** | Shows how many accounts are stored without opening anything. |
@@ -107,9 +107,9 @@ Then in Chrome, Edge, Brave, Opera or Arc:
 
 | | |
 | --- | --- |
-| **Browser** | Chrome / Edge / Brave / Opera / Arc 110+ (Manifest V3) |
-| **Node.js** | 18 or newer (for building only — the extension itself needs no runtime) |
-| **Permissions** | `storage`, `tabs`, `scripting`, `contextMenus` — all declared in `src/manifest.json` |
+| **Browser** | Chrome / Edge / Brave / Opera / Arc 116+ (Manifest V3) |
+| **Node.js** | 20 or newer (for building and the verification suites — the extension itself needs no runtime) |
+| **Permissions** | `storage`, `scripting`, `contextMenus`, plus host access to `https://discord.com/*` — all declared in `src/manifest.json` |
 
 ---
 
@@ -332,13 +332,16 @@ npm run typecheck      # tsc --noEmit, strict
 npm run verify:crypto  # exercises the real AES-GCM / PBKDF2 / re-key paths
 npm run verify:api     # asserts on the request the token travels in
 npm run verify:signin  # drives sign-in against stubbed browser APIs
+npm run verify:format  # exercises the pure formatting + CDN URL helpers
 npm run verify:page    # drives the injected page functions against a fake page
+npm run verify:docs    # every relative link in the READMEs resolves
 npm run build          # bundle + copy + verify into dist/
 npm run watch          # incremental rebuild
 npm run icons          # regenerate the PNG set
 npm run icons:preview  # build an icon contact sheet in icon-sheet.html
 npm run clean          # remove dist/
-npm run verify         # all six gates in order
+npm run pack           # build + wrap dist/ into a store-ready zip
+npm run verify         # all eight gates in order
 ```
 
 The build refuses to emit a `dist/` whose manifest or HTML references a file
@@ -349,8 +352,10 @@ that does not exist — a broken package fails the build rather than Chrome.
 | `typecheck` | strict `tsc` | Types, dead imports, API drift |
 | `verify:crypto` | 20 | Ciphertext hides the token, no IV reuse, wrong passphrase rejected, locking works, re-key migrates every record without loss |
 | `verify:api` | 18 | The token travels in the right header with no prefix or whitespace; 200/401/429 are classified correctly |
-| `verify:signin` | 12 | Sign-in waits for a committed document, falls back across frames, and reports the tab rather than the token on failure |
+| `verify:signin` | 15 | Sign-in waits for a committed document, falls back across frames, recovers via single reload, and reports the tab rather than the token on failure |
 | `verify:page` | 41 | The four capture layers, candidate ranking, and the unload guard that outranks the client's own handler |
+| `verify:format` | 23 | Decoration + avatar CDN URLs, token-list parsing, snowflake decoding and time buckets |
+| `verify:docs` | 6 | Every relative link across the five READMEs resolves to a real file |
 | `build` | manifest + HTML | Every referenced file exists in `dist/` |
 
 Each suite exists because of a real bug it caught. `verify:crypto` found a

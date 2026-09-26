@@ -102,6 +102,24 @@ function avatar(account: Account, isActive: boolean): HTMLElement {
   }
 
   node.append(el('span', { class: `avatar__status avatar__status--${account.status}` }));
+
+  // Discord draws decorations on top of the avatar and slightly beyond its
+  // bounds, so they need a wrapper that may overflow — the avatar itself
+  // clips its own image to a circle.
+  if (account.avatarDecorationUrl) {
+    const decoration = el('img', {
+      class: 'avatar__decoration',
+      src: account.avatarDecorationUrl,
+      alt: '',
+      loading: 'lazy',
+      decoding: 'async',
+    });
+
+    // A decoration the CDN no longer serves should leave the avatar alone.
+    decoration.addEventListener('error', () => decoration.remove());
+    return el('span', { class: 'avatar-decorated' }, [node, decoration]);
+  }
+
   return node;
 }
 
