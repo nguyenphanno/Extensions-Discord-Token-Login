@@ -1,18 +1,73 @@
+﻿<div align="center">
+
+<img src="./images/banner.png" alt="Discord Token Login" width="100%" />
+
 # Discord Token Login
 
-A Chromium (Manifest V3) extension for signing in to Discord with an
-authentication token, keeping several accounts stored locally, and switching
-between them in one click.
+**The multi-account manager and token switcher for Discord**  
+*A Chromium (Manifest V3) extension. Everything runs locally — no analytics, no telemetry, no third-party endpoints.*
 
-Everything runs on your machine. The extension talks to `discord.com` and to
-nothing else — no analytics, no telemetry, no third-party endpoints.
+[![Manifest V3](https://img.shields.io/badge/Manifest-V3-5865F2?style=flat-square&logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/mv3/intro)
+[![AES-256-GCM](https://img.shields.io/badge/AES--256--GCM-5865F2?style=flat-square&logo=lock&logoColor=white)](#-security-model)
+[![Zero Telemetry](https://img.shields.io/badge/Zero-Telemetry-57F287?style=flat-square&logo=shield&logoColor=white)](#-security-model)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](tsconfig.json)
+[![Build](https://img.shields.io/badge/Build-Passing-57F287?style=flat-square&logo=githubactions&logoColor=white)](#-development--quality-gates)
+[![Tests](https://img.shields.io/badge/Tests-91%2F91-57F287?style=flat-square&logo=jest&logoColor=white)](#-development--quality-gates)
+[![License: MIT](https://img.shields.io/badge/License-MIT-ED4245?style=flat-square)](LICENSE)
+
+</div>
+
+<p align="center">
+  <a href="#-features">Features</a> •
+  <a href="#-demo">Demo</a> •
+  <a href="#-installation">Install</a> •
+  <a href="#-security-model">Security</a> •
+  <a href="#-how-token-capture-works">How it works</a> •
+  <a href="#-development--quality-gates">Development</a> •
+  <a href="#-star-history">Star History</a>
+</p>
 
 ---
 
-## Features
+## 🌐 Languages
 
-| | |
-|---|---|
+<p align="center">
+  <a href="./README.md"><img src="https://img.shields.io/badge/README-English-5865F2?style=flat-square&logo=googlechrome&logoColor=white" alt="English" /></a>
+  <a href="./README_VI.md"><img src="https://img.shields.io/badge/README-Ti%E1%BA%BFng_Vi%E1%BB%87t-5865F2?style=flat-square" alt="Tiếng Việt" /></a>
+  <a href="./README_ZH.md"><img src="https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-5865F2?style=flat-square" alt="简体中文" /></a>
+  <a href="./README_KO.md"><img src="https://img.shields.io/badge/README-%ED%95%9C%EA%B5%AD%EC%96%B4-5865F2?style=flat-square" alt="한국어" /></a>
+  <a href="./README_JA.md"><img src="https://img.shields.io/badge/README-%E6%97%A5%E6%9C%AC%E8%AA%9E-5865F2?style=flat-square" alt="日本語" /></a>
+</p>
+
+---
+## 📸 Demo
+
+<div align="center">
+
+### Main popup — quick login, account switching, and session status
+
+<img src="./images/popup.png" alt="Discord Token Login popup" width="820" />
+
+<br />
+
+### Account manager — multiple profiles, token health, and private notes
+
+<img src="./images/accounts.png" alt="Discord Token Login account manager" width="820" />
+
+<br />
+
+### Settings — encryption mode, passphrase vault, and capture behaviour
+
+<img src="./images/settings.png" alt="Discord Token Login settings" width="820" />
+
+</div>
+
+---
+
+## ✨ Features
+
+| Area | What it does |
+| --- | --- |
 | **Quick login** | Paste a token and sign in. The token is validated before it is written anywhere. |
 | **Token capture** | Read the token straight out of a Discord tab that is already signed in, without copying anything by hand. |
 | **Account manager** | Keep several accounts, switch between them, attach local notes, and see which tokens are still healthy. |
@@ -23,16 +78,22 @@ nothing else — no analytics, no telemetry, no third-party endpoints.
 
 ---
 
-## Installing the build
+## 📥 Installation
+
+### From source
 
 ```bash
+git clone https://github.com/nguyenphanno/Extensions-Discord-Token-Login.git
+cd Extensions-Discord-Token-Login
 npm install          # once
 npm run build        # writes dist/
 ```
 
-Then in Chrome, Edge, Brave or Arc:
+### Load it in your browser
 
-1. Open `chrome://extensions`
+Then in Chrome, Edge, Brave, Opera or Arc:
+
+1. Open `chrome://extensions` (or `edge://extensions`, `brave://extensions`)
 2. Turn on **Developer mode**
 3. Click **Load unpacked**
 4. Select the `dist/` folder
@@ -42,10 +103,17 @@ Then in Chrome, Edge, Brave or Arc:
 > arrives through the optional dependency `@esbuild/win32-x64` — so the build
 > works anyway. You can ignore the warning.
 
+### Requirements
+
+| | |
+| --- | --- |
+| **Browser** | Chrome / Edge / Brave / Opera / Arc 110+ (Manifest V3) |
+| **Node.js** | 18 or newer (for building only — the extension itself needs no runtime) |
+| **Permissions** | `storage`, `tabs`, `scripting`, `contextMenus` — all declared in `src/manifest.json` |
 
 ---
 
-## Security model
+## 🔒 Security model
 
 Stated plainly, because tools that overstate their guarantees are worse than
 tools that admit their limits.
@@ -77,9 +145,31 @@ tools that admit their limits.
 the service worker console, so turning on verbose logging cannot be the thing
 that leaks a credential into `chrome://extensions`.
 
+### Data flow at a glance
+
+```
+token in  ──►  structural check  ──►  AES-256-GCM seal  ──►  chrome.storage.local
+                                               ▲
+                                               │
+                        device key  ────────────┤
+                        PBKDF2(passphrase) ─────┘   (passphrase mode:
+                                                       key lives only in
+                                                       chrome.storage.session)
+```
+
+### Threat model summary
+
+| Scenario | Device key mode | Passphrase mode |
+| --- | --- | --- |
+| Stolen browser profile | ⚠️ Key + ciphertext travel together | ✅ Only ciphertext is on disk |
+| Synced / backed-up profile | ⚠️ Both copies are readable | ✅ Ciphertext only |
+| Someone opening devtools | ⚠️ Visible | ✅ Visible, but useless without the passphrase |
+| Malware already running as you | ❌ Not defended | ❌ Not defended |
+| Browser closed | Key persists | ✅ Key wiped from memory |
+
 ---
 
-## How token capture works
+## 🧠 How token capture works
 
 A Discord tab's session is owned by the page, so capture goes through
 `chrome.scripting.executeScript` with `world: 'MAIN'` — inside the page's own
@@ -107,6 +197,22 @@ reports which one answered:
    token is accepted whatever the key is called; one buried in a larger blob is
    only lifted out of a key whose name says what it holds.
 
+```
+ ┌──────────────────────────────────────────────────────────┐
+ │            Discord tab token extraction                  │
+ └──────────────────────────────────────────────────────────┘
+          │
+          │  1. documented storage key
+          │  2. synthetic beforeunload  → memory flush
+          │  3. bundler module cache    → getToken()
+          │  4. bounded storage scan    → token-shaped value
+          ▼
+   candidates ranked by provenance + structure
+          │
+          ▼
+   Discord /users/@me decides which one is real
+```
+
 The page only *proposes*. Other modules in the client hand out strings with
 exactly a token's length and character set — a captcha, an analytics id, a nonce
 — and nothing local can tell those from a session. So the page returns every
@@ -116,6 +222,8 @@ account id), and the worker asks Discord which one is real: candidates are tried
 in order of trust, up to a small cap, and the first one Discord accepts wins. A
 false positive costs one request instead of the whole capture, and a capture
 that finds nothing usable now says so instead of showing a bare 401.
+
+### How sign-in works
 
 Signing in is the same story in reverse, with the same trap: the client
 publishes the session it holds in memory while the page unloads, so a plain
@@ -133,19 +241,21 @@ therefore
 Signing out uses the same guard with the opposite intent, which is why a signed
 out tab stays signed out across the reload.
 
-Two things are worth stating plainly. A function injected into a page may
-reference nothing outside its own body: Chrome serialises it with
-`Function.prototype.toString()`, so a helper declared beside it in the same file
-does not exist in the page, and the resulting `ReferenceError` is swallowed by
-the function's own `try/catch` — a silent failure neither the type checker nor
-the bundler can see. `npm run verify:page` reproduces Chrome's model exactly (the
-function's own source, evaluated in a bare realm) so that class of bug fails the
-build instead of the feature. And only ever capture your own account: a token is
-a password.
+```
+  setToken()      ─┐
+  storage write   ─┼─►  beforeunload  ─►  reload  ─►  session active
+  unload guard    ─┘        ▲
+                          └── registered last, so it outranks the client's own
+```
+
+> ⚠️ **Only ever capture your own account.** A token is a password. This project
+> is an independent tool and is **not affiliated with, endorsed by, or connected
+> to Discord Inc.** Using tokens — including your own — is governed by Discord's
+> Terms of Service.
 
 ---
 
-## Project structure
+## 📁 Project structure
 
 ```
 src/
@@ -193,63 +303,6 @@ The dependency direction is strictly one-way: `ui → platform → services →
 crypto → core`. Nothing in `core/` imports a Chrome API, which is what keeps the
 security-critical code testable in isolation.
 
----
-
-## Development
-
-```bash
-npm run typecheck      # tsc --noEmit, strict
-npm run verify:crypto  # exercises the real AES-GCM / PBKDF2 / re-key paths
-npm run verify:api     # asserts on the request the token travels in
-npm run verify:signin  # drives sign-in against stubbed browser APIs
-npm run verify:page    # drives the injected page functions against a fake page
-npm run build          # bundle + copy + verify into dist/
-npm run watch          # incremental rebuild
-npm run icons          # regenerate the PNG set
-npm run clean          # remove dist/
-npm run verify         # all six gates in order
-```
-
-The build refuses to emit a `dist/` whose manifest or HTML references a file
-that does not exist — a broken package fails the build rather than Chrome.
-
-`verify:crypto` bundles the vault against an in-memory `chrome.storage` and
-checks twenty invariants: that ciphertext on disk does not contain the token,
-that no IV is ever reused, that a wrong passphrase is rejected, that locking
-really hides records, and that switching protection mode migrates every record
-without losing one. It found a first-run bug during development where a fresh
-profile generated its device key but kept reading the pre-initialisation
-metadata, which made adding the very first account throw.
-
-`verify:page` takes the source of the two functions the extension injects into
-Discord's page, evaluates each one in a realm that contains nothing but a fake
-page, and drives forty-one cases through them: a token in a storage key, a
-token only in client memory, a token under a key nobody knows, a signed-out tab,
-a page with no storage, a page whose storage refuses to be read, a captcha
-shaped like a token, the ranking that puts a real session ahead of a lookalike,
-the frame preference that decides whose answer counts when several frames reply,
-and the write path including the unload guard that outranks the client's own
-handler. It exists because the bug that made capture fail for months was
-invisible to every other gate: an injected function reached for a module binding
-that does not exist in the page, and its own `try/catch` turned that into a
-quiet "no token found".
-
-`verify:api` stubs `fetch`, drives the real client code, and asserts on the
-bytes it was about to send — eighteen checks covering the header a user token
-must travel in, the local screen that refuses prose before it costs a request,
-and how 200, 401 and 429 are classified. It exists for the same reason as
-`verify:page`: a header bug is invisible to every other gate. A `Token ` prefix
-in front of the credential made Discord answer `401 Unauthorized` to perfectly
-valid tokens, while `tsc`, the bundler and the page suite all stayed green.
-
-`verify:signin` stubs the browser APIs — tabs, windows, `scripting` — and drives
-`signIn` itself, which is the half no other gate reaches: it waits for a
-committed Discord document instead of the blank one a tab reports `complete`
-for, asks the top frame first and falls back to every other frame when that one
-has no storage, and reports the tab rather than the token when a write has
-nowhere to land. It exists because "that tab is not a normal web page" was being
-said about perfectly ordinary Discord tabs whose app lives in a child frame.
-
 ### Design system
 
 `src/ui/styles/tokens.css` holds every colour, spacing step, type size, radius
@@ -270,9 +323,104 @@ image dependency in the toolchain.
 
 ---
 
-## Licence
+## 🛠️ Development & quality gates
 
-MIT. See [LICENSE](LICENSE).
+```bash
+npm install
 
+npm run typecheck      # tsc --noEmit, strict
+npm run verify:crypto  # exercises the real AES-GCM / PBKDF2 / re-key paths
+npm run verify:api     # asserts on the request the token travels in
+npm run verify:signin  # drives sign-in against stubbed browser APIs
+npm run verify:page    # drives the injected page functions against a fake page
+npm run build          # bundle + copy + verify into dist/
+npm run watch          # incremental rebuild
+npm run icons          # regenerate the PNG set
+npm run icons:preview  # build an icon contact sheet in icon-sheet.html
+npm run clean          # remove dist/
+npm run verify         # all six gates in order
+```
+
+The build refuses to emit a `dist/` whose manifest or HTML references a file
+that does not exist — a broken package fails the build rather than Chrome.
+
+| Gate | Checks | What it exists for |
+| --- | --- | --- |
+| `typecheck` | strict `tsc` | Types, dead imports, API drift |
+| `verify:crypto` | 20 | Ciphertext hides the token, no IV reuse, wrong passphrase rejected, locking works, re-key migrates every record without loss |
+| `verify:api` | 18 | The token travels in the right header with no prefix or whitespace; 200/401/429 are classified correctly |
+| `verify:signin` | 12 | Sign-in waits for a committed document, falls back across frames, and reports the tab rather than the token on failure |
+| `verify:page` | 41 | The four capture layers, candidate ranking, and the unload guard that outranks the client's own handler |
+| `build` | manifest + HTML | Every referenced file exists in `dist/` |
+
+Each suite exists because of a real bug it caught. `verify:crypto` found a
+first-run bug where a fresh profile generated its device key but kept reading
+pre-initialisation metadata. `verify:api` caught a `Token ` prefix that made
+Discord answer `401 Unauthorized` to perfectly valid tokens while every other
+gate stayed green. `verify:page` reproduces Chrome's injection model exactly — the
+function's own source evaluated in a bare realm — because the bug that made
+capture fail for months was an injected function reaching for a module binding
+that does not exist in the page, swallowed by its own `try/catch`.
+
+---
+
+## ❓ FAQ
+
+**Does this steal my account?**
+No. There is no server, no analytics, and no network call to anything but
+`discord.com`. Read `src/manifest.json` and `src/services/discord-client.ts` —
+they are short, and the whole codebase is auditable.
+
+**Why not just read `localStorage.getItem('token')`?**
+Because modern Discord keeps the token in memory and only mirrors it into
+storage while the page unloads. See [How token capture works](#-how-token-capture-works).
+
+**My account shows as expired.**
+Discord invalidated the session. Re-capture the token from a tab that is still
+signed in and save it again.
+
+**Can I use it on Firefox?**
+Not as-is. The extension targets Chromium MV3 and uses
+`chrome.scripting.executeScript` with `world: 'MAIN'`, which Firefox does not
+implement the same way.
+
+**Does the passphrase mode protect me from malware?**
+No. Anything already running as you can read process memory. It protects the
+*stored* copy, which is the realistic risk for a shared or backed-up machine.
+
+---
+
+## 📈 Star history
+
+Show your support by starring this repository!
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=nguyenphanno/Extensions-Discord-Token-Login&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=nguyenphanno/Extensions-Discord-Token-Login&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=nguyenphanno/Extensions-Discord-Token-Login&type=Date" />
+  </picture>
+</p>
+
+---
+
+## ⚠️ Disclaimer
+
+- This project is an independent open-source tool and is **not affiliated,
+  associated, authorized, endorsed by, or in any way officially connected with
+  Discord Inc.**
+- "Discord" and Discord logos are trademarks of Discord Inc.
+- Use this extension responsibly and in compliance with Discord's Terms of
+  Service. Never share your authentication tokens with untrusted parties.
+- The authors are not responsible for any account loss or restriction resulting
+  from misuse.
+
+---
+
+## 📜 License
+
+Distributed under the [MIT License](LICENSE). Built with ❤️ by
+[nguyenphanno](https://github.com/nguyenphanno).
 
 For an incremental rebuild while editing, use `npm run watch`.
+

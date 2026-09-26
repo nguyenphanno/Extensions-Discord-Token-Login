@@ -15,7 +15,8 @@
     "verify:api": "node scripts/discord-client-smoke.mjs",
     "verify:signin": "node scripts/sign-in-smoke.mjs",
     "verify:page": "node scripts/page-session-smoke.mjs",
-    "verify": "npm run typecheck && npm run verify:crypto && npm run verify:api && npm run verify:signin && npm run build && npm run verify:page"
+    "verify:docs": "node scripts/lint-readme-links.mjs",
+    "verify": "npm run typecheck && npm run verify:crypto && npm run verify:api && npm run verify:signin && npm run build && npm run verify:page && npm run verify:docs"
   },
   "devDependencies": {
     "esbuild": "0.25.0",
