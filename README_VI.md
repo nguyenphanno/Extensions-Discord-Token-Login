@@ -12,7 +12,7 @@
 [![Zero Telemetry](https://img.shields.io/badge/Zero-Telemetry-57F287?style=flat-square&logo=shield&logoColor=white)](#-mô-hình-bảo-mật)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](tsconfig.json)
 [![Build](https://img.shields.io/badge/Build-Passing-57F287?style=flat-square&logo=githubactions&logoColor=white)](#-phát-triển--cổng-chất-lượng)
-[![Tests](https://img.shields.io/badge/Tests-123%2F123-57F287?style=flat-square&logo=jest&logoColor=white)](#-phát-triển--cổng-chất-lượng)
+[![Tests](https://img.shields.io/badge/Tests-134%2F134-57F287?style=flat-square&logo=jest&logoColor=white)](#-phát-triển--cổng-chất-lượng)
 [![License: MIT](https://img.shields.io/badge/License-MIT-ED4245?style=flat-square)](LICENSE)
 
 </div>
@@ -303,9 +303,11 @@ kiểm thử được trong cô lập.
 npm install
 
 npm run typecheck      # tsc --noEmit, chế độ strict
+npm run lint          # eslint + prettier trên toàn repo
 npm run verify:crypto  # chạy thật các đường AES-GCM / PBKDF2 / tái khóa
 npm run verify:api     # khẳng định request mà token được gửi đi
 npm run verify:signin  # chạy đăng nhập với API trình duyệt giả lập
+npm run verify:extract  # chạy capture với các tab Discord giả lập
 npm run verify:format  # kiểm tra các hàm định dạng + URL CDN thuần
 npm run verify:page    # chạy hàm được chèn vào trang với trang giả lập
 npm run verify:docs    # mọi liên kết tương đối trong README đều tồn tại
@@ -315,7 +317,7 @@ npm run icons          # tạo lại bộ PNG
 npm run icons:preview  # dựng trang tổng hợp icon vào icon-sheet.html
 npm run clean          # xoá dist/
 npm run pack           # build rồi đóng gói zip để nộp store
-npm run verify         # chạy cả tám cổng theo thứ tự
+npm run verify         # chạy cả mười cổng theo thứ tự
 ```
 
 Bản build từ chối xuất ra một `dist/` mà manifest hoặc HTML tham chiếu tới tệp
@@ -324,9 +326,11 @@ không tồn tại — một gói hỏng sẽ hỏng build chứ không hỏng C
 | Cổng | Số kiểm tra | Điều nó sinh ra để bắt |
 | --- | --- | --- |
 | `typecheck` | strict `tsc` | Kiểu, import chết, trôi API |
+| `lint` | eslint + prettier | Code thừa, biến toàn cục chưa khai báo, lệch phong cách — các lỗi cơ bản mà `tsc` một mình không thấy |
 | `verify:crypto` | 20 | Bản mã hóa che token, không tái dùng IV, mật khẩu sai bị từ chối, khoá hoạt động, tái khóa di chuyển mọi bản ghi mà không mất |
 | `verify:api` | 18 | Token đi trong đúng header, không tiền tố, không khoảng trắng; 200/401/429 được phân loại đúng |
 | `verify:signin` | 15 | Đăng nhập chờ tài liệu đã commit, lùi qua các frame, tự hồi phục qua 1 lần tải lại, và báo tab thay vì báo token khi thất bại |
+| `verify:extract` | 11 | Capture chờ tài liệu đã commit, gọi tên từng chế độ thất bại gặp phải, và chỉ tốn đúng một lần tải lại cho bước hồi phục no-storage |
 | `verify:page` | 41 | Bốn lớp lấy token, xếp hạng ứng viên, và chốt unload đè lên handler của client |
 | `verify:format` | 23 | URL CDN avatar + trang trí, phân tích danh sách token, giải mã snowflake và mốc thời gian |
 | `verify:docs` | 6 | Mọi liên kết tương đối trong năm README đều trỏ tới tệp thật |

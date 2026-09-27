@@ -102,7 +102,9 @@ export class OptionsController {
           : 'pill';
 
     const usingPassphrase = state.lock !== 'unprotected';
-    qs('[data-mode="device"]').className = usingPassphrase ? 'mode mode--muted' : 'mode mode--active';
+    qs('[data-mode="device"]').className = usingPassphrase
+      ? 'mode mode--muted'
+      : 'mode mode--active';
     qs('[data-mode="passphrase"]').className = usingPassphrase
       ? 'mode mode--active'
       : 'mode mode--muted';
@@ -148,7 +150,12 @@ export class OptionsController {
 
     const signIn = el(
       'button',
-      { class: 'btn btn--primary btn--sm', type: 'button', 'data-act': 'sign-in', 'data-id': account.id },
+      {
+        class: 'btn btn--primary btn--sm',
+        type: 'button',
+        'data-act': 'sign-in',
+        'data-id': account.id,
+      },
       [icon('signIn', { size: 20 }), document.createTextNode('Sign in')],
     );
 

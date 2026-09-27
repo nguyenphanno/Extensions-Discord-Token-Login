@@ -167,6 +167,5 @@ export async function readTextFile(file: File, maxBytes = 512 * 1024): Promise<s
     throw new Error('That file is too large to be a token list. Pick a smaller .txt file.');
   }
   // A UTF-8 BOM would otherwise become part of the first token and break it.
-  return (await file.text()).replace(/^﻿/, '');
+  return (await file.text()).replace(/^\uFEFF/, '');
 }
-

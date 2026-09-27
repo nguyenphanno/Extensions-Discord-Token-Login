@@ -11,7 +11,12 @@ import { NETWORK } from '../core/constants';
 import { createLogger } from '../core/logger';
 import type { Account, AccountRecord, AppState, Settings } from '../core/types';
 import { mapLimit, sleep } from '../core/utils/async';
-import { buildAvatarDecorationUrl, buildAvatarUrl, resolveAccentColor, snowflakeToDate } from '../core/utils/format';
+import {
+  buildAvatarDecorationUrl,
+  buildAvatarUrl,
+  resolveAccentColor,
+  snowflakeToDate,
+} from '../core/utils/format';
 import { vault } from '../crypto/vault';
 import { readSettings, writeSettings } from '../platform/settings';
 import { checkToken, classifyApiError, looksLikeToken, type TokenCheck } from './discord-client';

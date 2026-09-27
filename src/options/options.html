@@ -67,7 +67,11 @@
           <div class="panel" data-slot="mode-panel">
             <div class="mode" data-mode="device">
               <div class="mode__head">
-                <span class="mode__icon mode__icon--brand" data-icon="database" aria-hidden="true"></span>
+                <span
+                  class="mode__icon mode__icon--brand"
+                  data-icon="database"
+                  aria-hidden="true"
+                ></span>
                 <div class="stack">
                   <p class="mode__title">Device key</p>
                   <p class="mode__sub">
@@ -85,7 +89,11 @@
 
             <div class="mode" data-mode="passphrase">
               <div class="mode__head">
-                <span class="mode__icon mode__icon--success" data-icon="lock" aria-hidden="true"></span>
+                <span
+                  class="mode__icon mode__icon--success"
+                  data-icon="lock"
+                  aria-hidden="true"
+                ></span>
                 <div class="stack">
                   <p class="mode__title">Passphrase</p>
                   <p class="mode__sub">
@@ -107,7 +115,12 @@
                 autocomplete="new-password"
                 spellcheck="false"
               />
-              <p class="field__hint field__hint--error" data-slot="pass-error" role="alert" hidden></p>
+              <p
+                class="field__hint field__hint--error"
+                data-slot="pass-error"
+                role="alert"
+                hidden
+              ></p>
             </div>
             <div class="field">
               <label class="field__label" for="confirm-pass">Confirm passphrase</label>
@@ -159,7 +172,9 @@
             <label class="switch">
               <span class="switch__text">
                 <span class="switch__title">Focus the token field on open</span>
-                <span class="switch__detail">Start typing a token as soon as the popup appears.</span>
+                <span class="switch__detail"
+                  >Start typing a token as soon as the popup appears.</span
+                >
               </span>
               <input type="checkbox" data-setting="focusTokenOnOpen" />
               <span class="switch__control" aria-hidden="true"></span>
@@ -168,7 +183,9 @@
             <label class="switch">
               <span class="switch__text">
                 <span class="switch__title">Clear the field after signing in</span>
-                <span class="switch__detail">Keeps a pasted token out of the DOM once it is saved.</span>
+                <span class="switch__detail"
+                  >Keeps a pasted token out of the DOM once it is saved.</span
+                >
               </span>
               <input type="checkbox" data-setting="clearTokenAfterLogin" />
               <span class="switch__control" aria-hidden="true"></span>

@@ -11,6 +11,8 @@
     "build": "node scripts/build.mjs",
     "watch": "node scripts/build.mjs --watch",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint . && prettier --check .",
+    "lint:fix": "eslint . --fix && prettier --write .",
     "verify:crypto": "node scripts/crypto-smoke.mjs",
     "verify:api": "node scripts/discord-client-smoke.mjs",
     "verify:signin": "node scripts/sign-in-smoke.mjs",
@@ -18,12 +20,17 @@
     "verify:page": "node scripts/page-session-smoke.mjs",
     "verify:format": "node scripts/format-smoke.mjs",
     "verify:docs": "node scripts/lint-readme-links.mjs",
-    "verify": "npm run typecheck && npm run verify:crypto && npm run verify:api && npm run verify:signin && npm run verify:extract && npm run verify:format && npm run build && npm run verify:page && npm run verify:docs",
+    "verify": "npm run typecheck && npm run lint && npm run verify:crypto && npm run verify:api && npm run verify:signin && npm run verify:extract && npm run verify:format && npm run build && npm run verify:page && npm run verify:docs",
     "pack": "npm run build && node scripts/pack.mjs"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "esbuild": "0.25.0",
-    "typescript": "5.7.3"
+    "eslint": "^10.11.0",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.9",
+    "typescript": "5.7.3",
+    "typescript-eslint": "^8.70.1"
   },
   "dependencies": {
     "@tabler/icons": "^3.48.0"

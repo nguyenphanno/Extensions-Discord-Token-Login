@@ -30,13 +30,19 @@ export function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-export function qs<T extends Element = HTMLElement>(selector: string, scope: ParentNode = document): T {
+export function qs<T extends Element = HTMLElement>(
+  selector: string,
+  scope: ParentNode = document,
+): T {
   const found = scope.querySelector<T>(selector);
   if (found === null) throw new Error(`Required element not found: ${selector}`);
   return found;
 }
 
-export function qsa<T extends Element = HTMLElement>(selector: string, scope: ParentNode = document): T[] {
+export function qsa<T extends Element = HTMLElement>(
+  selector: string,
+  scope: ParentNode = document,
+): T[] {
   return Array.from(scope.querySelectorAll<T>(selector));
 }
 

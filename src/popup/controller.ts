@@ -78,7 +78,9 @@ class PopupController {
       if (name === undefined) continue;
       host.replaceChildren(icon(name, { size: 18 }));
     }
-    document.querySelector<HTMLElement>('[data-mark]')?.replaceChildren(icon('brand', { size: 22 }));
+    document
+      .querySelector<HTMLElement>('[data-mark]')
+      ?.replaceChildren(icon('brand', { size: 22 }));
   }
 
   /**
@@ -515,7 +517,9 @@ class PopupController {
 
       // Add a brief success animation to the Sign in button
       submit.classList.add('success-flash');
-      submit.addEventListener('animationend', () => submit.classList.remove('success-flash'), { once: true });
+      submit.addEventListener('animationend', () => submit.classList.remove('success-flash'), {
+        once: true,
+      });
 
       toast(`Signed in as ${account.displayName}.`, 'success');
       this.#tab = 'accounts';
@@ -537,7 +541,9 @@ class PopupController {
       const row = document.querySelector<HTMLElement>(`[data-account="${id}"]`);
       if (row) {
         row.classList.add('success-flash');
-        row.addEventListener('animationend', () => row.classList.remove('success-flash'), { once: true });
+        row.addEventListener('animationend', () => row.classList.remove('success-flash'), {
+          once: true,
+        });
       }
 
       toast(`Signed in as ${account.displayName}.`, 'success');
@@ -768,4 +774,3 @@ class PopupController {
 }
 
 export const controller = new PopupController();
-

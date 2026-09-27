@@ -11,8 +11,7 @@ export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 const ORDER: Record<LogLevel, number> = { debug: 10, info: 20, warn: 30, error: 40 };
 
 const MIN_LEVEL: LogLevel =
-  ((globalThis as { __DTL_DEBUG__?: string }).__DTL_DEBUG__ as LogLevel | undefined) ??
-  'info';
+  ((globalThis as { __DTL_DEBUG__?: string }).__DTL_DEBUG__ as LogLevel | undefined) ?? 'info';
 
 /** `abcDEF123.xyz.456` → `abc***…***.456`. Also covers raw base64 JWT-ish blobs. */
 const TOKEN_SHAPED = /\b[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{5,}(?:\.[A-Za-z0-9_-]+)?\b/g;
@@ -40,8 +39,7 @@ function emit(level: LogLevel, scope: string, args: unknown[]): void {
     return arg;
   });
 
-  const sink =
-    level === 'error' ? console.error : level === 'warn' ? console.warn : console.log;
+  const sink = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log;
 
   sink(prefix, style, ...safe);
 }

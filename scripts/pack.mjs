@@ -60,5 +60,6 @@ if (result.status !== 0) {
 }
 
 const size = statSync(zipPath).size;
-const human = size < 1024 * 1024 ? `${(size / 1024).toFixed(1)} KB` : `${(size / 1024 / 1024).toFixed(2)} MB`;
+const human =
+  size < 1024 * 1024 ? `${(size / 1024).toFixed(1)} KB` : `${(size / 1024 / 1024).toFixed(2)} MB`;
 process.stdout.write(`\nPacked ${pkg.name}@${pkg.version} -> ${zipPath} (${human})\n`);

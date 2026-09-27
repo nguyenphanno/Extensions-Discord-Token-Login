@@ -32,7 +32,9 @@ async function loadMarkup() {
   });
 
   const code = out.outputFiles[0].text;
-  const module = await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
+  const module = await import(
+    `data:text/javascript;base64,${Buffer.from(code).toString('base64')}`
+  );
   return module.ICON_MARKUP;
 }
 

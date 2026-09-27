@@ -44,7 +44,11 @@ function ensureToastHost(): HTMLElement {
   return host;
 }
 
-export function toast(message: string, tone: ToastTone = 'neutral', ms: number = TIMING.TOAST_MS): void {
+export function toast(
+  message: string,
+  tone: ToastTone = 'neutral',
+  ms: number = TIMING.TOAST_MS,
+): void {
   const host = ensureToastHost();
 
   // Toast progress bar for auto-dismiss countdown
@@ -53,10 +57,14 @@ export function toast(message: string, tone: ToastTone = 'neutral', ms: number =
     style: `position:absolute;bottom:0;left:0;height:2px;width:100%;background:currentColor;opacity:0.2;border-radius:0 0 var(--radius-lg) var(--radius-lg);transform-origin:left;animation:toast-progress ${ms}ms linear forwards`,
   });
 
-  const node = el('div', { class: `toast toast--${tone}`, role: 'alert', style: 'position:relative;overflow:hidden' }, [
-    el('span', { class: 'toast__glyph' }, [icon(TONE_ICON[tone], { size: 20 })]),
-    el('span', { class: 'toast__text', text: message }),
-  ]);
+  const node = el(
+    'div',
+    { class: `toast toast--${tone}`, role: 'alert', style: 'position:relative;overflow:hidden' },
+    [
+      el('span', { class: 'toast__glyph' }, [icon(TONE_ICON[tone], { size: 20 })]),
+      el('span', { class: 'toast__text', text: message }),
+    ],
+  );
 
   const dismiss = (): void => {
     node.classList.add('toast--leaving');
@@ -152,9 +160,13 @@ export function confirmSheet(options: ConfirmOptions): Promise<boolean> {
     const toneIcon = options.tone === 'danger' ? 'warning' : 'info';
     const toneColor = options.tone === 'danger' ? 'var(--danger)' : 'var(--brand)';
 
-    const iconHeader = el('div', {
-      style: `display:grid;place-items:center;width:48px;height:48px;border-radius:var(--radius-lg);background:${options.tone === 'danger' ? 'var(--danger-quiet)' : 'var(--brand-quiet)'};margin-bottom:var(--space-4);color:${toneColor}`,
-    }, [icon(toneIcon as IconName, { size: 24 })]);
+    const iconHeader = el(
+      'div',
+      {
+        style: `display:grid;place-items:center;width:48px;height:48px;border-radius:var(--radius-lg);background:${options.tone === 'danger' ? 'var(--danger-quiet)' : 'var(--brand-quiet)'};margin-bottom:var(--space-4);color:${toneColor}`,
+      },
+      [icon(toneIcon as IconName, { size: 24 })],
+    );
 
     const confirmButton = el(
       'button',
@@ -170,7 +182,9 @@ export function confirmSheet(options: ConfirmOptions): Promise<boolean> {
       iconHeader,
       el('h2', { class: 'sheet__title', text: options.title }),
       el('p', { class: 'sheet__body', text: options.body }),
-      ...(options.footnote === undefined ? [] : [el('p', { class: 'sheet__footnote', text: options.footnote })]),
+      ...(options.footnote === undefined
+        ? []
+        : [el('p', { class: 'sheet__footnote', text: options.footnote })]),
       el('div', { class: 'sheet__actions' }, [cancelButton, confirmButton]),
     ]);
 
@@ -232,9 +246,14 @@ export function promptSheet(options: PromptOptions): Promise<string | null> {
   return new Promise((resolve) => {
     const previous = document.activeElement as HTMLElement | null;
 
-    const iconHeader = el('div', {
-      style: 'display:grid;place-items:center;width:48px;height:48px;border-radius:var(--radius-lg);background:var(--brand-quiet);margin-bottom:var(--space-4);color:var(--brand)',
-    }, [icon('pencil' as IconName, { size: 24 })]);
+    const iconHeader = el(
+      'div',
+      {
+        style:
+          'display:grid;place-items:center;width:48px;height:48px;border-radius:var(--radius-lg);background:var(--brand-quiet);margin-bottom:var(--space-4);color:var(--brand)',
+      },
+      [icon('pencil' as IconName, { size: 24 })],
+    );
 
     const field = el('textarea', {
       class: 'input',
@@ -265,7 +284,9 @@ export function promptSheet(options: PromptOptions): Promise<string | null> {
     const panel = el('div', { class: 'sheet__panel', role: 'dialog', 'aria-modal': 'true' }, [
       iconHeader,
       el('h2', { class: 'sheet__title', text: options.title }),
-      ...(options.body === undefined ? [] : [el('p', { class: 'sheet__body', text: options.body })]),
+      ...(options.body === undefined
+        ? []
+        : [el('p', { class: 'sheet__body', text: options.body })]),
       el('div', { class: 'stack', style: 'margin-top:16px' }, [field, counter]),
       el('div', { class: 'sheet__actions' }, [cancelButton, confirmButton]),
     ]);

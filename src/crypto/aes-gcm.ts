@@ -8,7 +8,13 @@
  */
 
 import { CRYPTO } from '../core/constants';
-import { bytesToUtf8, fromBase64, randomBytes, toBase64, utf8ToBytes } from '../core/utils/encoding';
+import {
+  bytesToUtf8,
+  fromBase64,
+  randomBytes,
+  toBase64,
+  utf8ToBytes,
+} from '../core/utils/encoding';
 
 /** JSON-serialisable ciphertext envelope, safe to hand to `chrome.storage`. */
 export interface EncryptedBlob {
@@ -25,10 +31,13 @@ export function generateRawKey(): Uint8Array {
 }
 
 export async function importKey(raw: Uint8Array, extractable = false): Promise<CryptoKey> {
-  return crypto.subtle.importKey('raw', toArrayBufferView(raw), { name: CRYPTO.ALGORITHM }, extractable, [
-    'encrypt',
-    'decrypt',
-  ]);
+  return crypto.subtle.importKey(
+    'raw',
+    toArrayBufferView(raw),
+    { name: CRYPTO.ALGORITHM },
+    extractable,
+    ['encrypt', 'decrypt'],
+  );
 }
 
 export async function exportKey(key: CryptoKey): Promise<Uint8Array> {

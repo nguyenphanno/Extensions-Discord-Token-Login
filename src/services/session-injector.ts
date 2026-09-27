@@ -26,11 +26,7 @@ export interface SignInOutcome {
 
 /** Why a sign-in failed, machine-readable so the caller can pick a response. */
 export type SignInFailureReason =
-  | 'unreachable'
-  | 'no-answer'
-  | 'blocked'
-  | 'no-storage'
-  | 'write-rejected';
+  'unreachable' | 'no-answer' | 'blocked' | 'no-storage' | 'write-rejected';
 
 export class SignInError extends Error {
   /**
@@ -52,7 +48,6 @@ interface PageWriteKeys {
   token: string;
   discriminator: string;
 }
-
 
 /** What the injected function resolves to. Never `undefined` — see below. */
 interface PageWrite {
@@ -437,7 +432,9 @@ async function writeWithRecovery(tabId: number, token: string): Promise<PageWrit
  * window. Reuses an existing Discord tab so switching accounts feels instant
  * instead of piling up tabs.
  */
-async function resolveTargetTab(openInNewWindow: boolean): Promise<{ tabId: number; reused: boolean }> {
+async function resolveTargetTab(
+  openInNewWindow: boolean,
+): Promise<{ tabId: number; reused: boolean }> {
   if (openInNewWindow) {
     const window = await chrome.windows.create({ url: DISCORD.APP_URL, focused: true });
     const tab = window.tabs?.[0];

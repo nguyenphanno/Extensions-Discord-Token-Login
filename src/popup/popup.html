@@ -36,7 +36,13 @@
         <span data-icon="key" aria-hidden="true"></span>
         <span>Log in</span>
       </button>
-      <button class="segmented__tab" type="button" role="tab" data-tab="accounts" aria-selected="false">
+      <button
+        class="segmented__tab"
+        type="button"
+        role="tab"
+        data-tab="accounts"
+        aria-selected="false"
+      >
         <span data-icon="users" aria-hidden="true"></span>
         <span>Accounts</span>
         <span class="segmented__count" data-slot="account-count" hidden>0</span>
@@ -66,7 +72,12 @@
               spellcheck="false"
               required
             />
-            <p class="field__hint field__hint--error" data-slot="unlock-error" role="alert" hidden></p>
+            <p
+              class="field__hint field__hint--error"
+              data-slot="unlock-error"
+              role="alert"
+              hidden
+            ></p>
           </div>
           <button class="btn btn--primary btn--block" type="submit" data-submit="unlock">
             <span data-icon="lock" aria-hidden="true"></span>
@@ -178,9 +189,8 @@
             <li>
               <span class="disclosure__step">
                 <span class="disclosure__text">
-                  Under <strong>Request Headers</strong>, find
-                  <code>authorization</code> and copy its whole value — that
-                  value is the token itself, with no prefix.
+                  Under <strong>Request Headers</strong>, find <code>authorization</code> and copy
+                  its whole value — that value is the token itself, with no prefix.
                 </span>
               </span>
             </li>
@@ -197,8 +207,8 @@
           <p class="disclosure__note">
             <span class="disclosure__note-icon" data-icon="warning" aria-hidden="true"></span>
             <span>
-              Only ever do this with your own account. A token is a password — anyone who
-              obtains one can sign in as you, with no second check.
+              Only ever do this with your own account. A token is a password — anyone who obtains
+              one can sign in as you, with no second check.
             </span>
           </p>
         </details>
@@ -234,7 +244,9 @@
             Paste a token on the Log in tab, or capture one from a Discord tab that is already
             signed in.
           </p>
-          <button class="btn btn--secondary" type="button" data-action="goto-login">Go to Log in</button>
+          <button class="btn btn--secondary" type="button" data-action="goto-login">
+            Go to Log in
+          </button>
         </div>
       </section>
     </main>

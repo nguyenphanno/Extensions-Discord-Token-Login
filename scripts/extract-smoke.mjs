@@ -1,8 +1,4 @@
-import {
-  mkdtempSync as mk1,
-  rmSync as rm1,
-  writeFileSync as wf1,
-} from 'node:fs';
+import { mkdtempSync as mk1, rmSync as rm1, writeFileSync as wf1 } from 'node:fs';
 import { tmpdir as td1 } from 'node:os';
 import { dirname as dn1, join as jn1, resolve as rs1 } from 'node:path';
 import { fileURLToPath as fp1, pathToFileURL as pu1 } from 'node:url';
@@ -48,7 +44,15 @@ async function main() {
   const bundle = jn1(dir, 'bundle.mjs');
   wf1(entry, all, 'utf8');
   try {
-    await eb.build({ entryPoints: [entry], outfile: bundle, bundle: true, format: 'esm', platform: 'neutral', target: ['node20'], logLevel: 'silent' });
+    await eb.build({
+      entryPoints: [entry],
+      outfile: bundle,
+      bundle: true,
+      format: 'esm',
+      platform: 'neutral',
+      target: ['node20'],
+      logLevel: 'silent',
+    });
     const mod = await import(pu1(bundle).href);
     const results = await mod.run();
     let failed = 0;
@@ -68,4 +72,3 @@ main().catch((e) => {
   process.stderr.write(String(e && e.stack ? e.stack : e) + '\n');
   process.exit(1);
 });
-

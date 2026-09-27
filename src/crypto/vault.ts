@@ -16,7 +16,7 @@
  *    settings page says exactly this.
  */
 
-import { STORAGE } from '../core/constants';
+import { CRYPTO, STORAGE } from '../core/constants';
 import { createLogger } from '../core/logger';
 import type { LockState } from '../core/types';
 import { fromBase64, toBase64 } from '../core/utils/encoding';
@@ -31,9 +31,6 @@ import {
 import { createKdfParams, deriveKeyFromPassphrase, type KdfParams } from './key-derivation';
 
 const log = createLogger('vault');
-
-/** Plaintext proving a candidate passphrase opens the right key. */
-const VERIFIER = 'dtl/v1/open-sesame';
 
 export type ProtectionMode = 'device' | 'passphrase';
 
@@ -165,11 +162,10 @@ export class Vault {
     const candidate = await deriveKeyFromPassphrase(passphrase, params);
     try {
       const proof = await decryptJson<string>(candidate, meta.verifier);
-      if (proof !== VERIFIER) throw new VaultAuthError();
-    } catch (error) {
-      // A GCM tag mismatch and an explicit mismatch are indistinguishable to
-      // an attacker, which is exactly what we want.
-      if (error instanceof VaultAuthError) throw error;
+      if (proof !== CRYPTO.VERIFIER_TEXT) throw new VaultAuthError();
+    } catch {
+      // A GCM tag mismatch and an explicit mismatch read identically from the
+      // outside, so either way the answer is simply "wrong passphrase".
       throw new VaultAuthError();
     }
 
@@ -213,7 +209,7 @@ export class Vault {
       const current = await this.requireKey();
       const params = createKdfParams();
       const next = await deriveKeyFromPassphrase(passphrase, params);
-      const verifier = await encryptJson(next, VERIFIER);
+      const verifier = await encryptJson(next, CRYPTO.VERIFIER_TEXT);
 
       const meta: VaultMeta = {
         version: STORAGE.SCHEMA_VERSION,
@@ -344,10 +340,7 @@ export class Vault {
       const blob = stored[storageKey] as EncryptedBlob | undefined;
       if (blob === undefined) continue;
       originals.set(storageKey, blob);
-      migrated.set(
-        storageKey,
-        await encryptJson(next, await decryptJson<unknown>(current, blob)),
-      );
+      migrated.set(storageKey, await encryptJson(next, await decryptJson<unknown>(current, blob)));
     }
 
     try {
@@ -372,4 +365,3 @@ export class Vault {
 
 /** Single vault instance shared by the whole service worker. */
 export const vault = new Vault();
-

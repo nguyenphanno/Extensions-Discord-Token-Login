@@ -174,8 +174,10 @@ export function readPageSession(keys: PageKeys): PageSession {
     // Session storage is optional; local storage already covers the app.
   }
 
+  // Same global `askClient` pushes into; a spelling drift here once made every
+  // "no token" answer report itself as a page that had not finished loading.
   report.hasApp =
-    typeof (window as unknown as { webpackChunkDiscord_app?: unknown }).webpackChunkDiscord_app !==
+    typeof (window as unknown as { webpackChunkdiscord_app?: unknown }).webpackChunkdiscord_app !==
     'undefined';
 
   /** Unwraps Discord's JSON encoding without ever throwing. */
@@ -332,9 +334,7 @@ export function readPageSession(keys: PageKeys): PageSession {
   //    one that only has the right shape is kept behind it. A token buried inside
   //    a blob is lifted out only when the key says what the blob holds, because
   //    guessing inside arbitrary values produces false hits.
-  const scanStorage = (
-    store: Storage,
-  ): Array<{ token: string; key: string }> => {
+  const scanStorage = (store: Storage): Array<{ token: string; key: string }> => {
     const loose: Array<{ token: string; key: string }> = [];
 
     for (const key of Object.keys(store)) {
@@ -395,7 +395,6 @@ export function readPageSession(keys: PageKeys): PageSession {
   report.reason = candidates.length > 0 ? 'ok' : blocked ? 'blocked' : 'no-session';
   return report;
 }
-
 
 /** Discord tabs, best candidate first: focused, then most-recently-active. */
 export async function findDiscordTab(): Promise<chrome.tabs.Tab> {
@@ -638,7 +637,10 @@ export async function extractTokenFromTab(tab: chrome.tabs.Tab): Promise<Extract
  * failure (site data blocked, a signed-out tab) is a property of the profile
  * or the tab, and reloading would not change it.
  */
-async function extractWithRecovery(tab: chrome.tabs.Tab, timeoutMs = TIMING.TAB_READY_TIMEOUT_MS): Promise<Extraction> {
+async function extractWithRecovery(
+  tab: chrome.tabs.Tab,
+  timeoutMs = TIMING.TAB_READY_TIMEOUT_MS,
+): Promise<Extraction> {
   const tabId = tab.id as number;
   try {
     return await extractTokenFromTab(tab);
@@ -664,7 +666,9 @@ async function extractWithRecovery(tab: chrome.tabs.Tab, timeoutMs = TIMING.TAB_
 }
 
 /** Convenience path used by the popup button and the context menu. */
-export async function extractFromActiveSession(timeoutMs = TIMING.TAB_READY_TIMEOUT_MS): Promise<Extraction> {
+export async function extractFromActiveSession(
+  timeoutMs = TIMING.TAB_READY_TIMEOUT_MS,
+): Promise<Extraction> {
   const tab = await findDiscordTab();
   const tabId = tab.id as number;
   if (!(await waitForDocument(tabId, timeoutMs))) {

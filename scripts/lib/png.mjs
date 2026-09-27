@@ -62,10 +62,7 @@ export function encodePng(width, height, rgba) {
   const raw = Buffer.alloc((stride + 1) * height);
   for (let y = 0; y < height; y += 1) {
     raw[y * (stride + 1)] = 0;
-    Buffer.from(rgba.buffer, rgba.byteOffset + y * stride, stride).copy(
-      raw,
-      y * (stride + 1) + 1,
-    );
+    Buffer.from(rgba.buffer, rgba.byteOffset + y * stride, stride).copy(raw, y * (stride + 1) + 1);
   }
 
   const ihdr = Buffer.alloc(13);
@@ -174,7 +171,7 @@ export function decodePng(file) {
   let transparency = null;
   const parts = [];
 
-  for (let offset = 8; offset + 8 <= file.length; ) {
+  for (let offset = 8; offset + 8 <= file.length;) {
     const length = file.readUInt32BE(offset);
     const type = file.toString('ascii', offset + 4, offset + 8);
     const data = file.subarray(offset + 8, offset + 8 + length);

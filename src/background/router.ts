@@ -35,15 +35,25 @@ function fail(error: unknown): Result<never> {
 async function broadcast(): Promise<void> {
   try {
     const state = await accountService.state();
-    await chrome.runtime
-      .sendMessage({ kind: 'state-changed', state })
-      .catch(() => undefined);
+    await chrome.runtime.sendMessage({ kind: 'state-changed', state }).catch(() => undefined);
     await refreshBadgeFromVault();
   } catch (error) {
     // A locked vault simply has no snapshot to broadcast.
     log.debug('Broadcast skipped', error);
   }
 }
+
+/**
+ * Requests that never change stored state, so a snapshot broadcast after them
+ * would only repeat work. Everything else — including lock and unlock, which
+ * change `state.lock` — broadcasts; a request type added later is broadcast
+ * too, which is the safer default.
+ */
+const READ_ONLY: ReadonlySet<Request['type']> = new Set([
+  'state/get',
+  'token/extract',
+  'token/validate',
+]);
 
 export async function handleRequest(request: Request): Promise<Response> {
   try {
@@ -138,6 +148,6 @@ export async function handleRequest(request: Request): Promise<Response> {
   } catch (error) {
     return fail(error);
   } finally {
-    void broadcast();
+    if (!READ_ONLY.has(request.type)) void broadcast();
   }
 }

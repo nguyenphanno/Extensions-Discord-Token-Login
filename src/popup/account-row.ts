@@ -33,7 +33,8 @@ export function accountRow(options: AccountRowOptions): HTMLLIElement {
   const { account, isActive, index, total } = options;
 
   const status = STATUS_COPY[account.status];
-  const lastUsed = account.lastUsedAt === null ? 'never used' : `used ${formatRelativeTime(account.lastUsedAt)}`;
+  const lastUsed =
+    account.lastUsedAt === null ? 'never used' : `used ${formatRelativeTime(account.lastUsedAt)}`;
 
   const meta = el('span', { class: 'account__meta' }, [
     el('span', { class: 'account__tag', text: account.tag }),
@@ -60,7 +61,10 @@ export function accountRow(options: AccountRowOptions): HTMLLIElement {
     body.title = account.note;
     meta.append(
       el('span', { class: 'account__dot', 'aria-hidden': 'true' }),
-      el('span', { class: 'pill pill--brand', text: `📝 ${account.note.length > 16 ? account.note.slice(0, 16) + '…' : account.note}` }),
+      el('span', {
+        class: 'pill pill--brand',
+        text: `📝 ${account.note.length > 16 ? account.note.slice(0, 16) + '…' : account.note}`,
+      }),
     );
   }
 
@@ -146,12 +150,11 @@ function actions(account: Account, isActive: boolean): HTMLElement {
     },
     [icon('more', { size: 20 })],
   );
-  overflow.append(el('span', { class: 'visually-hidden', text: `More actions for ${account.displayName}` }));
+  overflow.append(
+    el('span', { class: 'visually-hidden', text: `More actions for ${account.displayName}` }),
+  );
 
-  return el('span', { class: 'account__actions' }, [
-    isActive ? null : signIn,
-    overflow,
-  ]);
+  return el('span', { class: 'account__actions' }, [isActive ? null : signIn, overflow]);
 }
 
 /** Lede copy under the "Your accounts" heading. */

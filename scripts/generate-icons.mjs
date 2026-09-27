@@ -67,7 +67,12 @@ function taps(index, destinationLength, sourceLength) {
     fraction = 0;
   }
 
-  return fraction === 0 ? [[lower, 1]] : [[lower, 1 - fraction], [lower + 1, fraction]];
+  return fraction === 0
+    ? [[lower, 1]]
+    : [
+        [lower, 1 - fraction],
+        [lower + 1, fraction],
+      ];
 }
 
 function clampByte(value) {
@@ -159,7 +164,7 @@ function main() {
   try {
     logo = decodePng(readFileSync(LOGO));
   } catch (error) {
-    throw new Error(`Could not read src/assets/icons/Logo.png — ${error.message}`);
+    throw new Error('Could not read src/assets/icons/Logo.png', { cause: error });
   }
 
   if (logo.width < Math.max(...SIZES)) {
@@ -168,7 +173,9 @@ function main() {
     );
   }
   if (logo.width !== logo.height) {
-    process.stdout.write(`  note: the logo is ${logo.width}×${logo.height}; it is centred, not cropped.\n`);
+    process.stdout.write(
+      `  note: the logo is ${logo.width}×${logo.height}; it is centred, not cropped.\n`,
+    );
   }
 
   mkdirSync(ICON_DIR, { recursive: true });

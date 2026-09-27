@@ -30,6 +30,10 @@ jobs:
       # the cheapest possible detector for the drift this repo has had before.
       - run: npm ci
 
-      # One command, every gate: typecheck, the four smoke suites, the pure
+      # Lint runs separately so a style violation is named on its own line
+      # rather than buried inside the tail of the verify chain.
+      - run: npm run lint
+
+      # One command, every gate: typecheck, the smoke suites, the pure
       # formatting suite, the build check and the README link check.
       - run: npm run verify

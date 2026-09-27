@@ -1,0 +1,13 @@
+# Build products
+dist/
+icon-sheet.html
+
+# Generated source — written by scripts/gen-icons-ts.mjs
+src/ui/icon-paths.ts
+
+# Hand-tuned prose; prettier's markdown reflow would churn every README
+*.md
+
+# Not ours to format
+package-lock.json
+images/

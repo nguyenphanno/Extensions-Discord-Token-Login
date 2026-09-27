@@ -103,9 +103,7 @@ declare namespace chrome {
     }
 
     const onUpdated: {
-      addListener(
-        callback: (tabId: number, info: TabChangeInfo, tab: tabs.Tab) => void,
-      ): void;
+      addListener(callback: (tabId: number, info: TabChangeInfo, tab: tabs.Tab) => void): void;
     };
     const onRemoved: {
       addListener(callback: (tabId: number) => void): void;
@@ -174,9 +172,7 @@ declare namespace chrome {
     function removeAll(): Promise<void>;
 
     const onClicked: {
-      addListener(
-        callback: (data: OnClickData, tab?: tabs.Tab) => void,
-      ): void;
+      addListener(callback: (data: OnClickData, tab?: tabs.Tab) => void): void;
     };
   }
 

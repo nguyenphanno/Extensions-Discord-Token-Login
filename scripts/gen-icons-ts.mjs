@@ -85,7 +85,7 @@ const entries = await Promise.all(
     try {
       markup = await readGlyph(tablerName);
     } catch (error) {
-      throw new Error(`Cannot resolve icon "${name}" -> "${tablerName}": ${error.message}`);
+      throw new Error(`Cannot resolve icon "${name}" -> "${tablerName}"`, { cause: error });
     }
     return `  ${name}: '${markup.replace(/'/g, "\\'")}',`;
   }),

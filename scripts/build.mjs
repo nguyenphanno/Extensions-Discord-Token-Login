@@ -200,7 +200,7 @@ async function main() {
   mkdirSync(DIST, { recursive: true });
 
   for (const asset of STATIC) copyStatic(asset);
-for (const sheet of STYLESHEETS) writeStylesheet(sheet);
+  for (const sheet of STYLESHEETS) writeStylesheet(sheet);
 
   const options = buildOptions();
   const contexts = await Promise.all(

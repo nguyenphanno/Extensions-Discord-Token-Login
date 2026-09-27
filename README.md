@@ -12,7 +12,7 @@
 [![Zero Telemetry](https://img.shields.io/badge/Zero-Telemetry-57F287?style=flat-square&logo=shield&logoColor=white)](#-security-model)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](tsconfig.json)
 [![Build](https://img.shields.io/badge/Build-Passing-57F287?style=flat-square&logo=githubactions&logoColor=white)](#-development--quality-gates)
-[![Tests](https://img.shields.io/badge/Tests-123%2F123-57F287?style=flat-square&logo=jest&logoColor=white)](#-development--quality-gates)
+[![Tests](https://img.shields.io/badge/Tests-134%2F134-57F287?style=flat-square&logo=jest&logoColor=white)](#-development--quality-gates)
 [![License: MIT](https://img.shields.io/badge/License-MIT-ED4245?style=flat-square)](LICENSE)
 
 </div>
@@ -329,9 +329,11 @@ image dependency in the toolchain.
 npm install
 
 npm run typecheck      # tsc --noEmit, strict
+npm run lint          # eslint + prettier over the whole repo
 npm run verify:crypto  # exercises the real AES-GCM / PBKDF2 / re-key paths
 npm run verify:api     # asserts on the request the token travels in
 npm run verify:signin  # drives sign-in against stubbed browser APIs
+npm run verify:extract  # drives capture against stubbed Discord tabs
 npm run verify:format  # exercises the pure formatting + CDN URL helpers
 npm run verify:page    # drives the injected page functions against a fake page
 npm run verify:docs    # every relative link in the READMEs resolves
@@ -341,7 +343,7 @@ npm run icons          # regenerate the PNG set
 npm run icons:preview  # build an icon contact sheet in icon-sheet.html
 npm run clean          # remove dist/
 npm run pack           # build + wrap dist/ into a store-ready zip
-npm run verify         # all eight gates in order
+npm run verify         # all ten gates in order
 ```
 
 The build refuses to emit a `dist/` whose manifest or HTML references a file
@@ -350,9 +352,11 @@ that does not exist — a broken package fails the build rather than Chrome.
 | Gate | Checks | What it exists for |
 | --- | --- | --- |
 | `typecheck` | strict `tsc` | Types, dead imports, API drift |
+| `lint` | eslint + prettier | Unused code, undefined globals, style drift — the mechanical errors `tsc` alone cannot see |
 | `verify:crypto` | 20 | Ciphertext hides the token, no IV reuse, wrong passphrase rejected, locking works, re-key migrates every record without loss |
 | `verify:api` | 18 | The token travels in the right header with no prefix or whitespace; 200/401/429 are classified correctly |
 | `verify:signin` | 15 | Sign-in waits for a committed document, falls back across frames, recovers via single reload, and reports the tab rather than the token on failure |
+| `verify:extract` | 11 | Capture waits for a committed document, names each failure mode it meets, and spends exactly one reload on the no-storage recovery |
 | `verify:page` | 41 | The four capture layers, candidate ranking, and the unload guard that outranks the client's own handler |
 | `verify:format` | 23 | Decoration + avatar CDN URLs, token-list parsing, snowflake decoding and time buckets |
 | `verify:docs` | 6 | Every relative link across the five READMEs resolves to a real file |

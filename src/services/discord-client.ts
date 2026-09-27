@@ -126,7 +126,11 @@ async function toApiError(response: Response): Promise<DiscordApiError> {
     );
   }
   if (response.status === 429) {
-    return new DiscordApiError('Rate limited by Discord. Wait a moment and try again.', 429, retryAfterMs);
+    return new DiscordApiError(
+      'Rate limited by Discord. Wait a moment and try again.',
+      429,
+      retryAfterMs,
+    );
   }
 
   const label = response.statusText.length > 0 ? ` ${response.statusText}` : '';

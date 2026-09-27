@@ -12,7 +12,7 @@
 [![Zero Telemetry](https://img.shields.io/badge/Zero-Telemetry-57F287?style=flat-square&logo=shield&logoColor=white)](#-セキュリティモデル)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](tsconfig.json)
 [![Build](https://img.shields.io/badge/Build-Passing-57F287?style=flat-square&logo=githubactions&logoColor=white)](#-開発と品質ゲート)
-[![Tests](https://img.shields.io/badge/Tests-123%2F123-57F287?style=flat-square&logo=jest&logoColor=white)](#-開発と品質ゲート)
+[![Tests](https://img.shields.io/badge/Tests-134%2F134-57F287?style=flat-square&logo=jest&logoColor=white)](#-開発と品質ゲート)
 [![License: MIT](https://img.shields.io/badge/License-MIT-ED4245?style=flat-square)](LICENSE)
 
 </div>
@@ -303,9 +303,11 @@ src/
 npm install
 
 npm run typecheck      # tsc --noEmit、strict モード
+npm run lint          # リポジトリ全体に eslint + prettier を実行
 npm run verify:crypto  # 実物の AES-GCM / PBKDF2 / 再鍵化パスを実行
 npm run verify:api     # トークンが載る送信リクエストを検証
 npm run verify:signin  # スタブ化したブラウザ API でサインインを実行
+npm run verify:extract  # スタブ化した Discord タブでキャプチャを実行
 npm run verify:format  # 純粋な整形 + CDN URL ヘルパーを検証
 npm run verify:page    # 偽物のページで注入されるページ関数を実行
 npm run verify:docs    # README 内の相対リンクがすべて解決すること
@@ -315,7 +317,7 @@ npm run icons          # PNG セットを再生成
 npm run icons:preview  # icon-sheet.html にアイコン一覧を生成
 npm run clean          # dist/ を削除
 npm run pack           # ビルドしてストア提出用 zip を作成
-npm run verify         # 8 つのゲートをすべて順番に実行
+npm run verify         # 10 のゲートをすべて順番に実行
 ```
 
 ビルドは、manifest や HTML が存在しないファイルを参照している `dist/` を出力することを
@@ -324,9 +326,11 @@ npm run verify         # 8 つのゲートをすべて順番に実行
 | ゲート | チェック数 | 存在する理由 |
 | --- | --- | --- |
 | `typecheck` | strict `tsc` | 型、死んだ import、API のずれ |
+| `lint` | eslint + prettier | 未使用コード、未定義グローバル、スタイルのドリフト — `tsc` 単独では捉えられない機械的な誤り |
 | `verify:crypto` | 20 | 暗号文がトークンを隠す、IV の再利用なし、誤ったパスフレーズを拒否、ロックが機能、再鍵化が記録を一つも失わずに移行 |
 | `verify:api` | 18 | トークンが接頭辞も空白もなく正しいヘッダーで送られること。200/401/429 の分類が正しいこと |
 | `verify:signin` | 15 | サインインがコミット済みのドキュメントを待ち、フレーム間でフォールバックし、1 回のリロードで回復し、失敗時にトークンではなくタブを報告する |
+| `verify:extract` | 11 | キャプチャがコミット済みドキュメントを待ち、遭遇した失敗モードを名指しし、no-storage 回復に 1 回だけリロードを使う |
 | `verify:page` | 41 | 4 つのキャプチャ層、候補の優先順位付け、そしてクライアント自身のハンドラーを上回るアンロードガード |
 | `verify:format` | 23 | アバター + 装飾の CDN URL、トークン一覧の解析、スノーフレークのデコードと時間バケット |
 | `verify:docs` | 6 | 5 つの README の相対リンクがすべて実在するファイルを指す |
