@@ -52,10 +52,11 @@ Tokens are AES-256-GCM ciphertext at rest with a fresh 96-bit IV per write. In
 **passphrase** mode the key is derived with PBKDF2-HMAC-SHA256 (310 000
 iterations) and is never written to disk — it lives in `chrome.storage.session`,
 which is memory-backed and cleared when the browser closes. In **device** mode
-the key sits in `chrome.storage.local` next to the ciphertext: that defeats a
-copied profile, a synced backup and casual devtools inspection, but it does not
-defeat code already running as you. Both statements are load-bearing parts of
-the design and are documented in the README.
+the key sits in `chrome.storage.local` next to the ciphertext. Encryption
+protects the record format, but anyone who can copy the extension profile or
+read its storage can obtain both the key and ciphertext. It does not protect
+against code already running with access to your browser profile. These limits
+are documented in the README.
 
 The extension talks to nothing except `discord.com` and its CDN, ships no
 telemetry, and loads no remote code.

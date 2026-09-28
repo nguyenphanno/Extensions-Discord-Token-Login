@@ -7,13 +7,12 @@
  *  - re-key every record atomically when the protection mode changes
  *
  * Threat model, stated plainly:
- *  - At rest, tokens are AES-256-GCM ciphertext. A stolen profile directory
- *    yields nothing without the key.
+ *  - At rest, tokens are AES-256-GCM ciphertext. In device mode the key is
+ *    stored beside it; only passphrase mode separates the key from the profile.
  *  - In `passphrase` mode the key never touches persistent storage.
  *  - In `device` mode the key *is* in `chrome.storage.local` next to the
- *    ciphertext. This defeats opportunistic reads, sync copies and casual
- *    inspection — it is not a defence against local code execution. The
- *    settings page says exactly this.
+ *    ciphertext. It does not protect against a copied profile or code with
+ *    access to extension storage. The settings page explains this limit.
  */
 
 import { CRYPTO, STORAGE } from '../core/constants';
@@ -81,6 +80,8 @@ export class Vault {
   #ready: Promise<VaultMeta> | null = null;
   /** Serialises mutations so two messages can never interleave a re-key. */
   #queue: Promise<unknown> = Promise.resolve();
+  /** A fresh profile can receive several first requests before its key exists. */
+  #deviceInitialisation: Promise<void> | null = null;
 
   /* ---------------------------------------------------------------- state */
 
@@ -139,7 +140,12 @@ export class Vault {
     if (meta.mode === 'passphrase') return;
 
     if (meta.deviceKey === null) {
-      await this.#initialiseDeviceMode();
+      if (this.#deviceInitialisation === null) {
+        this.#deviceInitialisation = this.#initialiseDeviceMode().finally(() => {
+          this.#deviceInitialisation = null;
+        });
+      }
+      await this.#deviceInitialisation;
       meta = await this.meta();
     }
 
@@ -252,53 +258,56 @@ export class Vault {
   /* -------------------------------------------------------------- records */
 
   async read<T>(id: string): Promise<T | null> {
-    const key = await this.requireKey();
-    const storageKey = STORAGE.RECORD_PREFIX + id;
-    const stored = await chrome.storage.local.get(storageKey);
-    const blob = stored[storageKey] as EncryptedBlob | undefined;
-    if (blob === undefined) return null;
+    return this.#serialised(async () => {
+      const key = await this.requireKey();
+      const storageKey = STORAGE.RECORD_PREFIX + id;
+      const stored = await chrome.storage.local.get(storageKey);
+      const blob = stored[storageKey] as EncryptedBlob | undefined;
+      if (blob === undefined) return null;
 
-    try {
-      return await decryptJson<T>(key, blob);
-    } catch (error) {
-      log.error(`Record ${id} failed to decrypt — treating as lost`, error);
-      return null;
-    }
+      try {
+        return await decryptJson<T>(key, blob);
+      } catch (error) {
+        log.error(`Record ${id} failed to decrypt — treating as unreadable`, error);
+        return null;
+      }
+    });
   }
 
   async write<T>(id: string, value: T): Promise<void> {
-    const key = await this.requireKey();
-    const blob = await encryptJson(key, value);
-    await chrome.storage.local.set({ [STORAGE.RECORD_PREFIX + id]: blob });
+    return this.#serialised(async () => {
+      const key = await this.requireKey();
+      const blob = await encryptJson(key, value);
+      await chrome.storage.local.set({ [STORAGE.RECORD_PREFIX + id]: blob });
+    });
   }
 
   async remove(id: string): Promise<void> {
-    await this.requireKey();
-    await chrome.storage.local.remove(STORAGE.RECORD_PREFIX + id);
+    return this.#serialised(async () => {
+      await this.requireKey();
+      await chrome.storage.local.remove(STORAGE.RECORD_PREFIX + id);
+    });
   }
 
   /** Record ids in stable (alphabetical) order so the UI never reshuffles. */
   async listIds(): Promise<string[]> {
-    await this.requireKey();
-    const all = await chrome.storage.local.get(null);
-    return Object.keys(all)
-      .filter((key) => key.startsWith(STORAGE.RECORD_PREFIX))
-      .map((key) => key.slice(STORAGE.RECORD_PREFIX.length))
-      .sort();
+    return this.#serialised(() => this.#listIds());
   }
 
   /** Wipes every encrypted record and the key material. Irreversible. */
   async destroy(): Promise<void> {
-    const all = await chrome.storage.local.get(null);
-    const doomed = Object.keys(all).filter((key) => key.startsWith(STORAGE.RECORD_PREFIX));
-    if (doomed.length > 0) await chrome.storage.local.remove(doomed);
+    return this.#serialised(async () => {
+      const all = await chrome.storage.local.get(null);
+      const doomed = Object.keys(all).filter((key) => key.startsWith(STORAGE.RECORD_PREFIX));
+      if (doomed.length > 0) await chrome.storage.local.remove(doomed);
 
-    this.#key = null;
-    this.#meta = null;
-    this.#ready = null;
-    await chrome.storage.session.remove(STORAGE.SESSION_KEY);
-    await chrome.storage.local.remove([STORAGE.VAULT_META, STORAGE.SETTINGS]);
-    await this.#initialiseDeviceMode();
+      this.#key = null;
+      this.#meta = null;
+      this.#ready = null;
+      await chrome.storage.session.remove(STORAGE.SESSION_KEY);
+      await chrome.storage.local.remove([STORAGE.VAULT_META, STORAGE.SETTINGS]);
+      await this.#initialiseDeviceMode();
+    });
   }
 
   /* ---------------------------------------------------------------- inner */
@@ -330,7 +339,8 @@ export class Vault {
    * partial re-key can never destroy data.
    */
   async #rekey(current: CryptoKey, next: CryptoKey, meta: VaultMeta): Promise<void> {
-    const ids = await this.listIds();
+    const previousMeta = { ...(await this.meta()) };
+    const ids = await this.#listIds();
     const originals = new Map<string, unknown>();
     const migrated = new Map<string, EncryptedBlob>();
 
@@ -348,18 +358,37 @@ export class Vault {
       await this.#persistMeta(meta);
     } catch (error) {
       log.error('Re-key failed, rolling back to previous ciphertexts', error);
-      await chrome.storage.local.set(Object.fromEntries(originals)).catch(() => undefined);
+      try {
+        if (originals.size > 0) await chrome.storage.local.set(Object.fromEntries(originals));
+        await chrome.storage.local.set({ [STORAGE.VAULT_META]: previousMeta });
+        this.#meta = previousMeta;
+      } catch (rollbackError) {
+        log.error('Vault re-key rollback could not be completed', rollbackError);
+        throw new Error(
+          'Vault re-key failed and its rollback could not be confirmed. Do not close the browser; reopen the extension and check the vault.',
+          { cause: rollbackError },
+        );
+      }
       throw error;
     }
   }
 
   async #persistMeta(meta: VaultMeta): Promise<void> {
-    this.#meta = meta;
     await chrome.storage.local.set({ [STORAGE.VAULT_META]: meta });
+    this.#meta = meta;
   }
 
   async #cacheSessionKey(raw: Uint8Array): Promise<void> {
     await chrome.storage.session.set({ [STORAGE.SESSION_KEY]: toBase64(raw) });
+  }
+
+  async #listIds(): Promise<string[]> {
+    await this.requireKey();
+    const all = await chrome.storage.local.get(null);
+    return Object.keys(all)
+      .filter((key) => key.startsWith(STORAGE.RECORD_PREFIX))
+      .map((key) => key.slice(STORAGE.RECORD_PREFIX.length))
+      .sort();
   }
 }
 

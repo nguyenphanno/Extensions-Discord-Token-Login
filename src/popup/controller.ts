@@ -27,6 +27,7 @@ const HANDOFF_KEY = 'dtl:handoff';
 
 const EMPTY_STATE: AppState = {
   accounts: [],
+  unreadableAccountIds: [],
   activeAccountId: null,
   lock: 'unprotected',
   settings: {
@@ -185,7 +186,12 @@ class PopupController {
     const empty = qs<HTMLElement>('[data-slot="accounts-empty"]');
     const lede = qs<HTMLElement>('[data-slot="accounts-lede"]');
 
-    lede.textContent = accountsLede(accounts);
+    lede.textContent =
+      this.#state.unreadableAccountIds.length > 0
+        ? accounts.length === 0
+          ? `${this.#state.unreadableAccountIds.length} unreadable record(s); review in settings`
+          : `${accountsLede(accounts)} · ${this.#state.unreadableAccountIds.length} unreadable record(s); review in settings`
+        : accountsLede(accounts);
     const hasAccounts = accounts.length > 0;
     empty.hidden = hasAccounts;
     empty.style.display = hasAccounts ? 'none' : 'flex';

@@ -115,19 +115,25 @@ export class OptionsController {
 
     this.renderAccounts(state);
     this.renderSettings(state.settings);
-    qs('[data-slot="account-count"]').textContent = String(state.accounts.length);
+    qs('[data-slot="account-count"]').textContent = String(
+      state.accounts.length + state.unreadableAccountIds.length,
+    );
     this.trackSection();
   }
   private renderAccounts(state: AppState): void {
     const list = qs<HTMLUListElement>('[data-slot="account-rows"]');
     const lede = qs<HTMLElement>('[data-slot="accounts-lede"]');
 
+    const storedCount = state.accounts.length + state.unreadableAccountIds.length;
     lede.textContent =
-      state.accounts.length === 0
+      storedCount === 0
         ? 'No accounts are stored in this browser yet.'
-        : `${pluralize(state.accounts.length, 'account')} stored, encrypted at rest.`;
+        : `${pluralize(storedCount, 'record')} stored, encrypted at rest.` +
+          (state.unreadableAccountIds.length > 0
+            ? ` ${state.unreadableAccountIds.length} could not be decrypted; remove it here if you no longer need it.`
+            : '');
 
-    if (state.accounts.length === 0) {
+    if (storedCount === 0) {
       list.className = 'rows rows--empty';
       list.replaceChildren(
         el('li', {
@@ -142,7 +148,32 @@ export class OptionsController {
       ...state.accounts.map((account) =>
         this.accountRow(account, account.id === state.activeAccountId),
       ),
+      ...state.unreadableAccountIds.map((id) => this.unreadableRow(id)),
     );
+  }
+
+  private unreadableRow(id: string): HTMLLIElement {
+    const remove = el(
+      'button',
+      {
+        class: 'btn btn--danger btn--sm',
+        type: 'button',
+        'data-act': 'remove',
+        'data-id': id,
+        'aria-label': `Remove unreadable record ${id}`,
+      },
+      ['Remove record'],
+    );
+    return el('li', { class: 'row-item' }, [
+      el('div', { class: 'row-item__body' }, [
+        el('div', { class: 'row-item__name' }, [
+          el('span', { text: 'Unreadable account record' }),
+          el('span', { class: 'pill pill--danger', text: 'Needs attention' }),
+        ]),
+        el('div', { class: 'row-item__meta' }, [el('span', { class: 'mono', text: id })]),
+      ]),
+      el('div', { class: 'row-item__actions' }, [remove]),
+    ]);
   }
 
   private accountRow(account: Account, isActive: boolean): HTMLLIElement {
@@ -317,11 +348,14 @@ export class OptionsController {
   private async remove(id: string): Promise<void> {
     const state = this.#state;
     const account = state?.accounts.find((candidate) => candidate.id === id);
-    if (account === undefined) return;
+    const unreadable = state?.unreadableAccountIds.includes(id) === true;
+    if (account === undefined && !unreadable) return;
 
     const confirmed = await confirmSheet({
-      title: `Remove ${account.displayName}?`,
-      body: 'The encrypted token is deleted from this browser immediately.',
+      title: unreadable ? 'Remove unreadable record?' : `Remove ${account?.displayName}?`,
+      body: unreadable
+        ? 'This record could not be decrypted. Removing it deletes its encrypted data from this browser.'
+        : 'The encrypted token is deleted from this browser immediately.',
       confirmLabel: 'Remove',
       tone: 'danger',
     });
@@ -329,7 +363,7 @@ export class OptionsController {
 
     try {
       await call({ type: 'account/remove', id });
-      toast(`Removed ${account.tag}.`, 'success');
+      toast(unreadable ? 'Unreadable record removed.' : `Removed ${account?.tag}.`, 'success');
     } catch (error) {
       this.toastError(error);
     }

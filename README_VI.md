@@ -133,9 +133,10 @@ công cụ thừa nhận giới hạn của mình.
 **Không được bảo đảm**
 
 - Ở chế độ **khóa thiết bị** (mặc định), khóa nằm trong `chrome.storage.local`
-  cạnh bản mã hóa. Điều này chặn được profile bị sao chép, bản sao lưu đồng bộ,
-  và người tùy tiện mở devtools. Nó **không** chặn được mã đã chạy sẵn trên máy
-  của bạn.
+  cạnh bản mã hóa. Mã hóa bảo vệ định dạng bản ghi, nhưng ai sao chép được
+  profile trình duyệt hoặc đọc được storage của tiện ích đều có thể lấy cả khóa
+  lẫn dữ liệu mã hóa. Chế độ này **không** bảo vệ khỏi mã đã có quyền truy cập
+  vào profile trình duyệt.
 - Tiện ích có thể đọc token Discord vì đó chính là mục đích của nó. Hãy đối xử
   với nó như bất kỳ công cụ nào có thể chạm vào thông tin đăng nhập: cài từ nguồn
   bạn tin tưởng.

@@ -87,17 +87,28 @@ export const accountService = {
   },
 
   async state(): Promise<AppState> {
-    const [accounts, settings, lock] = await Promise.all([
-      this.list(),
+    const [ids, settings, lock] = await Promise.all([
+      vault.listIds(),
       readSettings(),
       vault.state(),
     ]);
+    const records = await mapLimit(ids, 8, async (id) => vault.read<AccountRecord>(id));
+    const unreadableAccountIds = ids.filter((_, index) => records[index] === null);
+    const accounts = records
+      .filter((record): record is AccountRecord => record !== null)
+      .map((record) => record.account);
 
     const activeAccountId = accounts.some((a) => a.id === settings.activeAccountId)
       ? settings.activeAccountId
       : null;
 
-    return { accounts, activeAccountId, lock, settings: { ...settings, activeAccountId } };
+    return {
+      accounts: sortForDisplay(accounts, activeAccountId),
+      unreadableAccountIds,
+      activeAccountId,
+      lock,
+      settings: { ...settings, activeAccountId },
+    };
   },
 
   async count(): Promise<number> {

@@ -88,6 +88,8 @@ export type LockState = 'unlocked' | 'locked' | 'unprotected';
 /** Snapshot returned to the UI on every open. */
 export interface AppState {
   accounts: Account[];
+  /** Record ids present in storage that could not be decrypted. */
+  unreadableAccountIds: string[];
   activeAccountId: string | null;
   lock: LockState;
   settings: Settings;

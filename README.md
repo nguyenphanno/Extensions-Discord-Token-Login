@@ -133,9 +133,10 @@ tools that admit their limits.
 **What is not guaranteed**
 
 - In **device key** mode (the default) the key sits in `chrome.storage.local`
-  next to the ciphertext. This defeats a copied profile, a synced backup, and
-  someone casually opening devtools. It does **not** defeat code that is already
-  running on your machine.
+  next to the ciphertext. Encryption still protects the stored record format,
+  but anyone who can copy the extension profile or read its storage can obtain
+  both the key and ciphertext. It does **not** protect against code already
+  running with access to your browser profile.
 - The extension can read a Discord token because that is what it is for. Treat
   it like any other tool that can touch credentials: install it from a source
   you trust.
